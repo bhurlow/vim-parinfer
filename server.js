@@ -10,29 +10,28 @@ var handler = function(req, res) {
 
     req.on('end', function() {
 
-      // console.log('raw body', body)
-      
-      var obj = JSON.parse(body);
-      
-      var cursor = {
-        cursorX: obj.cursor, 
-        cursorLine: obj.line
+      if (req.url === "/" ) {
+        return res.end('ok')
       }
-    
-      var executed = parinfer.indentMode(obj.text, cursor)
-      res.end(executed.text)
 
-      //   if (req.url == "/indent-mode") {
-      //       res.end(parinfer.indentMode(obj.text, {"cursorX": obj.cursor,
-      //                                              "cursorLine": obj.line}).text + "\n");
-      //   }
-      //   else if (req.url == "/paren-mode") {
-      //       res.end(parinfer.indentMode(obj.text, {"cursorX": obj.cursor,
-      //                                              "cursorLine": obj.line}).text + "\n");
-      //   }
-      //   else if (req.url == "/indent-mode-changed") {
-      //       res.end(parinfer.indentMode(body).text + "\n");
-      //   }
+      else if (req.url === "/indent") {
+        console.log('indent happened!')
+        var obj = JSON.parse(body);
+        var cursor = {
+          cursorX: obj.cursor, 
+          cursorLine: obj.line
+        }
+        var executed = parinfer.indentMode(obj.text, cursor)
+        console.log('text start')
+        console.log(executed.text)
+        console.log('text end')
+        res.end(executed.text)
+      }
+
+      else if (req.url === "/paren") {
+        res.end('todo')
+      }
+
     });
 
 };
@@ -41,10 +40,3 @@ var server = http.createServer(handler);
 server.listen(8088, function() {
   console.log("Server Listening");
 });
-
-module.exports = function() {
-    var server = http.createServer(handler);
-    server.listen(8088, function() {
-        console.log("Server Listening");
-    });
-};
