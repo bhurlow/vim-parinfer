@@ -2,7 +2,7 @@
 
 this is a vim plugin for using [parinfer](https://shaunlebron.github.io/parinfer/) to indent your clojure and lisp code.
 
-**WIP pull requests // issues welcome**
+<h5 style="color: blue;"> **WIP** pull requests // issues welcome </h5>
 
 ## installation 
 
