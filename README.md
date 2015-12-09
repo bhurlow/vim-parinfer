@@ -4,7 +4,7 @@ this is a vim plugin for using [parinfer](https://shaunlebron.github.io/parinfer
 
 <h5 style="color: blue;"> **WIP** pull requests // issues welcome </h5>
 
-## installation 
+## Installation 
 
 using pathogen: 
 
