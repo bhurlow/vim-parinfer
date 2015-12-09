@@ -39,7 +39,7 @@ function! SendStr()
 endfunction
 
 function! StartServer()
-  let cmd = "node server.js > /tmp/parinfer.log & echo $!"
+  let cmd = "node server.js &> /tmp/parinfer.log & echo $!"
   let pid = system(cmd)
   let g:parinfer_server_pid = pid
   return pid
