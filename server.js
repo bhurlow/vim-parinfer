@@ -15,7 +15,6 @@ var handler = function(req, res) {
       }
 
       else if (req.url === "/indent") {
-        console.log('indent happened!')
         var obj = JSON.parse(body);
         var cursor = {
           cursorX: obj.cursor, 

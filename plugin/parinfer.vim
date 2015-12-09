@@ -21,7 +21,10 @@ function! SendStr()
   
   let page = join(getline(1,'$'), "\n")
   let body = substitute(page, '\n', '\\n', 'g')
-  let jsonbody = '{"text": "' . body . '", "cursor": 10, "line": 10}'
+  let pos = getpos(".")
+  let cursor = pos[0]
+  let line = pos[1]
+  let jsonbody = '{"text": "' . body . '", "cursor":' . cursor . ', "line":' . line . '}'
   let cmd = "curl -s -X POST -d '" . jsonbody . "' localhost:8088/indent" 
   let res = system(cmd)
   redraw!
@@ -45,19 +48,31 @@ endfunction
 function! StopServer()
   let cmd = "kill -9 " . g:parinfer_server_pid
   let res = system(cmd)
-  echo res
+endfunction
+
+function! DoIndent()
+  normal >>
+  call SendStr()
+endfunction
+
+function! Undent()
+  normal <<
+  call SendStr()
 endfunction
 
 augroup parinfer
   autocmd!
   autocmd BufNewFile,BufReadPost *.clj setfiletype clojure
   nnoremap <buffer> <leader>bb :call SendStr()<cr>
-  au CursorMoved *.clj call SendStr()
+  au InsertLeave *.clj call SendStr()
   au VimLeavePre * call StopServer()
+  au FileType clojure nnoremap <Tab> :call DoIndent()<cr>
+  au FileType clojure nnoremap <S-Tab> :call Undent()<cr>
+  au FileType clojure nnoremap w :call DoIndent()<cr>
+  au FileType clojure nnoremap q :call Undent()<cr>
 augroup END
 
 function! SetupParinfer()
-  echom "setting up parinfer"
   let g:parinfer_setup = 1
   call StartServer()
 endfunction

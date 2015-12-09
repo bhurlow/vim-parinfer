@@ -1,4 +1,4 @@
 
-(defn thing 
- [arg1 arg2])
-(do (call-server 500))
+(defn [asdf]
+  (dog 100)
+  (thingy 500))
