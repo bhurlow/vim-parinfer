@@ -5,19 +5,19 @@
 
 " TODO: let server port be global var
 
-let g:server_reachable = 0
+let g:parinfer_server_reachable = 0
 let g:loaded_fireplace = 1
 let g:parinfer_server_pid = 0
 let g:parinfer_mode = "indent"
 let g:parinfer_script_dir = resolve(expand("<sfile>:p:h:h"))
 
 " not currently used 
-function! PingServer()
+function! s:ping_server()
   let cmd = 'curl -sw "%{http_code}" localhost:8088 -o /dev/null'
   return system(cmd)
 endfunction
 
-function! SendStr()
+function! s:send_buffer()
   
   if !g:parinfer_server_pid
     echo "parinfer server not started"
@@ -43,48 +43,58 @@ function! SendStr()
   call setpos('.', save_cursor)
 endfunction
 
+" function! StartServer()
+" endfunction
 
-function! StartServer()
-  let cmd = "node " . g:parinfer_script_dir . "/server.js"  . " &> /tmp/parinfer.log & echo $!"
-  let pid = system(cmd)
-  " not sure why it gives 0 all the time: echo "SHELL CMD STATUS CODE" . v:shell_error
-  " i'd like to detect of the server command returns an error code
-  let g:parinfer_server_pid = pid
-  return pid
+function! s:start_server()
+  let status = s:ping_server()
+  if status == 200 
+    return 0
+  else
+    let cmd = "node " . g:parinfer_script_dir . "/server.js"  . " &> /tmp/parinfer.log & echo $!"
+    let pid = system(cmd)
+    " not sure why it gives 0 all the time: echo "SHELL CMD STATUS CODE" . v:shell_error
+    " i'd like to detect of the server command returns an error code
+    let g:parinfer_server_pid = pid
+    return pid
+  endif
 endfunction
 
-function! StopServer()
+function! s:stop_server()
   let cmd = "kill -9 " . g:parinfer_server_pid
   let res = system(cmd)
 endfunction
 
-function! DoIndent()
+function! s:do_indent()
   normal >>
-  call SendStr()
+  call s:send_buffer()
 endfunction
 
 function! Undent()
   normal <<
-  call SendStr()
+  call s:send_buffer()
 endfunction
 
 augroup parinfer
   autocmd!
   autocmd BufNewFile,BufReadPost *.clj setfiletype clojure
-  nnoremap <buffer> <leader>bb :call SendStr()<cr>
-  au InsertLeave *.clj call SendStr()
-  au VimLeavePre * call StopServer()
-  au FileType clojure nnoremap <Tab> :call DoIndent()<cr>
+  autocmd BufNewFile,BufReadPost *.clj call s:start_server()
+  nnoremap <buffer> <leader>bb :call s:send_buffer()<cr>
+  au InsertLeave *.clj call s:send_buffer()
+  au VimLeavePre * call s:stop_server()
+  au FileType clojure nnoremap <Tab> :call s:do_indent()<cr>
   au FileType clojure nnoremap <S-Tab> :call Undent()<cr>
-  au FileType clojure nnoremap w :call DoIndent()<cr>
+  au FileType clojure nnoremap w :call s:do_indent()<cr>
   au FileType clojure nnoremap q :call Undent()<cr>
 augroup END
 
-function! SetupParinfer()
-  let g:parinfer_setup = 1
-  call StartServer()
-endfunction
+" function! SetupParinfer()
+"   let g:parinfer_setup = 1
+"   call StartServer()
+" endfunction
 
-if !exists("g:parinfer_setup")
-  call SetupParinfer()
-endif
+" if !exists("g:parinfer_setup")
+"   echo "STARTING UP"
+"   call SetupParinfer()
+" endif
+
