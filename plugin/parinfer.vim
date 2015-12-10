@@ -6,7 +6,6 @@
 " TODO: let server port be global var
 
 let g:parinfer_server_reachable = 0
-let g:loaded_fireplace = 1
 let g:parinfer_server_pid = 0
 let g:parinfer_mode = "indent"
 let g:parinfer_script_dir = resolve(expand("<sfile>:p:h:h"))
@@ -49,7 +48,7 @@ endfunction
 function! s:start_server()
   let status = s:ping_server()
   if status == 200 
-    return 0
+    return 1
   else
     let cmd = "node " . g:parinfer_script_dir . "/server.js"  . " &> /tmp/parinfer.log & echo $!"
     let pid = system(cmd)
@@ -63,14 +62,16 @@ endfunction
 function! s:stop_server()
   let cmd = "kill -9 " . g:parinfer_server_pid
   let res = system(cmd)
+  echo res
 endfunction
 
 function! s:do_indent()
+  echo "DO INDDNET"
   normal >>
   call s:send_buffer()
 endfunction
 
-function! Undent()
+function! s:do_undent()
   normal <<
   call s:send_buffer()
 endfunction
@@ -81,11 +82,11 @@ augroup parinfer
   autocmd BufNewFile,BufReadPost *.clj call s:start_server()
   nnoremap <buffer> <leader>bb :call s:send_buffer()<cr>
   au InsertLeave *.clj call s:send_buffer()
-  au VimLeavePre * call s:stop_server()
-  au FileType clojure nnoremap <Tab> :call s:do_indent()<cr>
-  au FileType clojure nnoremap <S-Tab> :call Undent()<cr>
-  au FileType clojure nnoremap w :call s:do_indent()<cr>
-  au FileType clojure nnoremap q :call Undent()<cr>
+  au VimLeavePre *.clj call s:stop_server()
+  au FileType clojure nnoremap <Tab> :call <sid>do_indent()<cr>
+  au FileType clojure nnoremap <S-Tab> :call <sid>do_undent()<cr>
+  au FileType clojure nnoremap w :call <sid>do_indent()<cr>
+  au FileType clojure nnoremap q :call <sid>do_undent()<cr>
 augroup END
 
 " function! SetupParinfer()
