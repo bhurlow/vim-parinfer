@@ -1,10 +1,15 @@
 
+" VIM PARINFER PLUGIN
+" v 0.0.2
+" brian@brianhurlow.com
+
 " TODO: let server port be global var
 
 let g:server_reachable = 0
 let g:loaded_fireplace = 1
 let g:parinfer_server_pid = 0
 let g:parinfer_mode = "indent"
+let g:parinfer_script_dir = resolve(expand("<sfile>:p:h:h"))
 
 " not currently used 
 function! PingServer()
@@ -38,9 +43,12 @@ function! SendStr()
   call setpos('.', save_cursor)
 endfunction
 
+
 function! StartServer()
-  let cmd = "node server.js &> /tmp/parinfer.log & echo $!"
+  let cmd = "node " . g:parinfer_script_dir . "/server.js"  . " &> /tmp/parinfer.log & echo $!"
   let pid = system(cmd)
+  " not sure why it gives 0 all the time: echo "SHELL CMD STATUS CODE" . v:shell_error
+  " i'd like to detect of the server command returns an error code
   let g:parinfer_server_pid = pid
   return pid
 endfunction
@@ -75,6 +83,7 @@ augroup END
 function! SetupParinfer()
   let g:parinfer_setup = 1
   call StartServer()
+  echo "SETUP DONE"
 endfunction
 
 if !exists("g:parinfer_setup")
