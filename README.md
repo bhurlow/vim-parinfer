@@ -34,7 +34,6 @@ and finally:
 
 ```
  cd ~/.vim/bundle/vim-parinfer/ && npm install
-
 ```
 
 
