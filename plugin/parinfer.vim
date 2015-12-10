@@ -42,9 +42,6 @@ function! s:send_buffer()
   call setpos('.', save_cursor)
 endfunction
 
-" function! StartServer()
-" endfunction
-
 function! s:start_server()
   let status = s:ping_server()
   if status == 200 
@@ -62,11 +59,9 @@ endfunction
 function! s:stop_server()
   let cmd = "kill -9 " . g:parinfer_server_pid
   let res = system(cmd)
-  echo res
 endfunction
 
 function! s:do_indent()
-  echo "DO INDDNET"
   normal >>
   call s:send_buffer()
 endfunction
