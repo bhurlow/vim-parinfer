@@ -89,13 +89,3 @@ augroup parinfer
   au FileType clojure nnoremap q :call <sid>do_undent()<cr>
 augroup END
 
-" function! SetupParinfer()
-"   let g:parinfer_setup = 1
-"   call StartServer()
-" endfunction
-
-" if !exists("g:parinfer_setup")
-"   echo "STARTING UP"
-"   call SetupParinfer()
-" endif
-
