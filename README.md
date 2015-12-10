@@ -6,13 +6,37 @@ this is a vim plugin for using [parinfer](https://shaunlebron.github.io/parinfer
 
 ## Installation 
 
-using pathogen: 
+### using pathogen: 
 
 ```
 cd ~/.vim/bundle
 git clone git://github.com/bhurlow/vim-parinfer.git
 npm install 
 ```
+### using Vundle:
+
+add 
+
+```
+Plugin 'bhurlow/vim-parinfer'
+```
+
+to your `.vimrc`
+
+run
+ 
+```
+:PluginInstall
+```
+in vim
+ 
+and finally:
+
+```
+ cd ~/.vim/bundle/vim-parinfer/ && npm install
+
+```
+
 
 ## Mappings 
 
