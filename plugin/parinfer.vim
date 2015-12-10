@@ -83,7 +83,6 @@ augroup END
 function! SetupParinfer()
   let g:parinfer_setup = 1
   call StartServer()
-  echo "SETUP DONE"
 endfunction
 
 if !exists("g:parinfer_setup")
