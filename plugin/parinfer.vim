@@ -1,6 +1,6 @@
 
 " VIM PARINFER PLUGIN
-" v 0.0.2
+" v 0.0.3
 " brian@brianhurlow.com
 
 " TODO: let server port be global var
@@ -63,7 +63,8 @@ function! s:send_buffer()
 
   " avoiding passing var directly 
   " to shell cmd b/c of enconding crazyness
-  let cmd = "cat /tmp/parifer_deck.txt | curl -s -X POST -d @- localhost:8088/indent"
+  let cmd = "cat /tmp/parifer_deck.txt | curl -s -X POST -d @- localhost:8088"
+  let cmd = cmd . "/" . g:parinfer_mode
 
   " call silent here b/c redir normally
   " prints to page and file
@@ -104,13 +105,20 @@ function! s:start_server()
   endif
 endfunction
 
+function ToggleParinferMode()
+  if g:parinfer_mode == "indent"
+    let g:parinfer_mode = "paren"
+  else
+    let g:parinfer_mode = "indent"
+  endif
+endfunction
+
 function! s:stop_server()
   let cmd = "kill -9 " . g:parinfer_server_pid
   let res = system(cmd)
 endfunction
 
 function! s:do_indent()
-  " echom "doing indent"
   normal! >>
   call s:send_buffer()
 endfunction

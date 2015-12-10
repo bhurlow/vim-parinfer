@@ -28,7 +28,16 @@ var handler = function(req, res) {
       }
 
       else if (req.url === "/paren") {
-        res.end('todo')
+        var obj = JSON.parse(body);
+        var cursor = {
+          cursorX: obj.cursor, 
+          cursorLine: obj.line
+        }
+        var executed = parinfer.parenMode(obj.text, cursor)
+        console.log('text start')
+        console.log(executed.text)
+        console.log('text end')
+        res.end(executed.text)
       }
 
     });
