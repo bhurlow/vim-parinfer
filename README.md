@@ -11,7 +11,7 @@ this is a vim plugin for using [parinfer](https://shaunlebron.github.io/parinfer
 ```
 cd ~/.vim/bundle
 git clone git://github.com/bhurlow/vim-parinfer.git
-npm install 
+cd vim-parinfer && npm install 
 ```
 ### using Vundle:
 
