@@ -1,3 +1,7 @@
 
+
+
 (defn [asdf]
-  (thingy 500))
+  (do (someshit
+        (ago 1o 3))
+  (thingy 500)))

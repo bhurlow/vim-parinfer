@@ -10,10 +10,54 @@ let g:parinfer_server_pid = 0
 let g:parinfer_mode = "indent"
 let g:parinfer_script_dir = resolve(expand("<sfile>:p:h:h"))
 
-" not currently used 
 function! s:ping_server()
   let cmd = 'curl -sw "%{http_code}" localhost:8088 -o /dev/null'
   return system(cmd)
+endfunction
+
+function! g:Select_full_form()
+  " recursive search might be good
+  "  searchpair('(', '', ')', 'r')
+
+  let starting_line = line('.')
+
+  let top_empty = 0
+  let bottom_empty = 0
+
+  " recursivley search for empty line above
+  while !top_empty
+    let l = getline(starting_line)
+    if l == ""
+      let top_empty = starting_line
+      break
+    elseif l == 1
+      break
+    endif
+    let starting_line = starting_line -  1
+  endwhile
+
+  " b/c we know it was previously on an empty line
+  let starting_line += 1
+  
+  while !bottom_empty
+    let l = getline(starting_line)
+    if l == ""
+      let bottom_empty = starting_line
+      break
+    elseif l == 1
+      break
+    endif
+    let starting_line = starting_line +  1
+  endwhile
+
+  let lines = getline(top_empty + 1, bottom_empty - 1)
+  
+  let section = ""
+  for frag in lines
+    let section = section . frag
+  endfor 
+  echo section
+  
 endfunction
 
 function! s:draw(res)
@@ -105,7 +149,7 @@ function! s:start_server()
   endif
 endfunction
 
-function ToggleParinferMode()
+function! ToggleParinferMode()
   if g:parinfer_mode == "indent"
     let g:parinfer_mode = "paren"
   else
@@ -137,7 +181,10 @@ augroup parinfer
   au VimLeavePre *.clj call <sid>stop_server()
   au FileType clojure nnoremap <Tab> :call <sid>do_indent()<cr>
   au FileType clojure nnoremap <S-Tab> :call <sid>do_undent()<cr>
-  au FileType clojure nnoremap w :call <sid>do_indent()<cr>
-  au FileType clojure nnoremap q :call <sid>do_undent()<cr>
+  " stil considering these mappings
+  " au TextChanged *.clj call <sid>send_buffer()
+  " au FileType clojure nnoremap <M-Tab> :call <sid>do_undent()<cr>
+  nnoremap ]] /^(<CR>
+  nnoremap [[ ?^(<CR>
 augroup END
 
