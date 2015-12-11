@@ -15,12 +15,11 @@ function! s:ping_server()
   return system(cmd)
 endfunction
 
+" recursive search might be good
+"  searchpair('(', '', ')', 'r')
 function! g:Select_full_form()
-  " recursive search might be good
-  "  searchpair('(', '', ')', 'r')
 
   let starting_line = line('.')
-
   let top_empty = 0
   let bottom_empty = 0
 
@@ -52,21 +51,28 @@ function! g:Select_full_form()
 
   let lines = getline(top_empty + 1, bottom_empty - 1)
   
-  let section = ""
-  for frag in lines
-    let section = section . frag
-  endfor 
-  echo section
+  let section = join(lines, "\n")
+  " for frag in lines
+  "   let section = section . frag
+  " endfor 
+  
+  return [top_empty, bottom_empty, section]
   
 endfunction
 
-function! s:draw(res)
-  redraw!
+function! s:draw(res, top, bottom)
+
   let save_cursor = getpos(".")
-  normal! ggdG
-  let @a = a:res
-  execute "put a"
-  normal! ggdd
+  let lines = split(a:res, "\n")
+
+  let counter = a:top + 1
+  for line in lines
+    call setline(counter, line)
+    let counter += 1
+  endfor
+  redraw!
+
+  " reset cursor to where it was
   call setpos('.', save_cursor)
 endfunction
 
@@ -100,8 +106,12 @@ function! s:send_buffer()
   let cursor = pos[0]
   let line = pos[1]
 
-  let page = join(getline(1,'$'), "\n")
-  let body = s:encode(page)
+  let block = Select_full_form()
+  let top_line = block[0]
+  let bottom_line = block[1]
+  let form = block[2]
+
+  let body = s:encode(form)
 
   let jsonbody = '{"text":' . body . ',"cursor":' . cursor . ',"line":' . line . '}'
 
@@ -128,9 +138,9 @@ function! s:send_buffer()
   " if our shell command fails 
   " don't draw the res
   if v:shell_error != 0
-    call s:draw(res)
+    echo "shell error"
   else
-    call s:draw(res)
+    call s:draw(res, top_line, bottom_line)
   endif
   
 endfunction
