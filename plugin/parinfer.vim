@@ -189,11 +189,11 @@ augroup parinfer
   nnoremap <buffer> <leader>bb :call <sid>send_buffer()<cr>
   autocmd InsertLeave *.clj call <sid>send_buffer()
   autocmd VimLeavePre *.clj call <sid>stop_server()
-  autocmd FileType clojure nnoremap <Tab> :call <sid>do_indent()<cr>
-  autocmd FileType clojure nnoremap <S-Tab> :call <sid>do_undent()<cr>
+  autocmd FileType clojure nnoremap <buffer> <Tab> :call <sid>do_indent()<cr>
+  autocmd FileType clojure nnoremap <buffer> <S-Tab> :call <sid>do_undent()<cr>
   " stil considering these mappings
   " au TextChanged *.clj call <sid>send_buffer()
   " au FileType clojure nnoremap <M-Tab> :call <sid>do_undent()<cr>
-  nnoremap ]] /^(<CR>
-  nnoremap [[ ?^(<CR>
+  autocmd FileType clojure nnoremap <buffer> ]] /^(<CR>
+  autocmd FileType clojure nnoremap <buffer> [[ ?^(<CR>
 augroup END
