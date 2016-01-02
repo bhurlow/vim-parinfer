@@ -184,11 +184,10 @@ endfunction
 
 augroup parinfer
   autocmd!
-  autocmd BufNewFile,BufReadPost *.clj setfiletype clojure
-  autocmd BufNewFile,BufReadPost *.clj call s:start_server()
+  autocmd BufNewFile,BufReadPost *.clj,*.cljs call s:start_server()
   nnoremap <buffer> <leader>bb :call <sid>send_buffer()<cr>
-  autocmd InsertLeave *.clj call <sid>send_buffer()
-  autocmd VimLeavePre *.clj call <sid>stop_server()
+  autocmd InsertLeave *.clj,*.cljs call <sid>send_buffer()
+  autocmd VimLeavePre *.clj,*cljs call <sid>stop_server()
   autocmd FileType clojure nnoremap <buffer> <Tab> :call <sid>do_indent()<cr>
   autocmd FileType clojure nnoremap <buffer> <S-Tab> :call <sid>do_undent()<cr>
   " stil considering these mappings
@@ -197,3 +196,4 @@ augroup parinfer
   autocmd FileType clojure nnoremap <buffer> ]] /^(<CR>
   autocmd FileType clojure nnoremap <buffer> [[ ?^(<CR>
 augroup END
+

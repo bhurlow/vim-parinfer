@@ -1,7 +1,7 @@
 
 
-
 (defn [asdf]
-  (do (someshit
-        (ago 1o 3))
-  (thingy 500)))
+  (ago 1o 3))
+
+(defn [asdfe]
+  (asdnfaoe 123123 0))
