@@ -1,23 +1,23 @@
 
 " VIM PARINFER PLUGIN
-" v 0.0.3
+" v 0.0.4
 " brian@brianhurlow.com
 
 " TODO: let server port be global var
 
 let g:parinfer_server_reachable = 0
-let g:parinfer_server_pid = 0
+"let g:parinfer_server_pid = 0
 let g:parinfer_mode = "indent"
 let g:parinfer_script_dir = resolve(expand("<sfile>:p:h:h"))
 
-function! s:ping_server()
+function! parinfer#ping_server()
   let cmd = 'curl -sw "%{http_code}" localhost:8088 -o /dev/null'
   return system(cmd)
 endfunction
 
 " recursive search might be good
 "  searchpair('(', '', ')', 'r')
-function! g:Select_full_form()
+function! s:Select_full_form()
 
   let starting_line = line('.')
   let top_empty = 0
@@ -60,7 +60,7 @@ function! g:Select_full_form()
   
 endfunction
 
-function! s:draw(res, top, bottom)
+function! parinfer#draw(res, top, bottom)
 
   let save_cursor = getpos(".")
   let lines = split(a:res, "\n")
@@ -76,7 +76,7 @@ function! s:draw(res, top, bottom)
   call setpos('.', save_cursor)
 endfunction
 
-function! s:write_tmp(body)
+function! parinfer#write_tmp(body)
   redir! > /tmp/parifer_deck.txt
     echo a:body
   redir END
@@ -86,7 +86,7 @@ endfunction
 " can be json parse-able 
 " thanks:
 " https://github.com/mattn/webapi-vim/blob/master/autoload/webapi/json.vim
-function! s:encode(data)
+function! parinfer#encode(data)
 	let body = '"' . escape(a:data, '\"') . '"'
 	let body = substitute(body, "\r", '\\r', 'g')
 	let body = substitute(body, "\n", '\\n', 'g')
@@ -95,23 +95,23 @@ function! s:encode(data)
 	return iconv(body, &encoding, "utf-8")
 endfunction
 
-function! s:send_buffer()
+function! parinfer#send_buffer()
 
-  if !g:parinfer_server_pid
-    echo "parinfer server not started"
-    return 0
-  endif
+  "if !g:parinfer
+  "  echo "parinfer server not started"
+  "  return 0
+  "endif
   
   let pos = getpos(".")
   let cursor = pos[0]
   let line = pos[1]
 
-  let block = Select_full_form()
+  let block = s:Select_full_form()
   let top_line = block[0]
   let bottom_line = block[1]
   let form = block[2]
 
-  let body = s:encode(form)
+  let body = parinfer#encode(form)
 
   let jsonbody = '{"text":' . body . ',"cursor":' . cursor . ',"line":' . line . '}'
 
@@ -122,7 +122,7 @@ function! s:send_buffer()
 
   " call silent here b/c redir normally
   " prints to page and file
-  :silent call s:write_tmp(jsonbody)
+  :silent call parinfer#write_tmp(jsonbody)
 
   let res = ""
 
@@ -140,13 +140,13 @@ function! s:send_buffer()
   if v:shell_error != 0
     echo "shell error"
   else
-    call s:draw(res, top_line, bottom_line)
+    call parinfer#draw(res, top_line, bottom_line)
   endif
   
 endfunction
 
-function! s:start_server()
-  let status = s:ping_server()
+function! parinfer#start_server()
+  let status = parinfer#ping_server()
   if status == 200 
     return 1
   else
@@ -154,12 +154,12 @@ function! s:start_server()
     let pid = system(cmd)
     " not sure why it gives 0 all the time: echo "SHELL CMD STATUS CODE" . v:shell_error
     " i'd like to detect of the server command returns an error code
-    let g:parinfer_server_pid = pid
+    "let g:parinfer_server_pid = pid
     return pid
   endif
 endfunction
 
-function! ToggleParinferMode()
+function! parinfer#ToggleParinferMode()
   if g:parinfer_mode == "indent"
     let g:parinfer_mode = "paren"
   else
@@ -167,33 +167,34 @@ function! ToggleParinferMode()
   endif
 endfunction
 
-function! s:stop_server()
+function! parinfer#stop_server()
   let cmd = "kill -9 " . g:parinfer_server_pid
   let res = system(cmd)
 endfunction
 
-function! s:do_indent()
+function! parinfer#do_indent()
   normal! >>
-  call s:send_buffer()
+  call parinfer#send_buffer()
 endfunction
 
-function! s:do_undent()
+function! parinfer#do_undent()
   normal! <<
-  call s:send_buffer()
+  call parinfer#send_buffer()
 endfunction
+
+"nnoremap <buffer> <leader>bb :call parinfer#pasend_buffer()<cr>
+com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode() 
 
 augroup parinfer
   autocmd!
-  autocmd BufNewFile,BufReadPost *.clj,*.cljs,*.cljc call s:start_server()
-  nnoremap <buffer> <leader>bb :call <sid>send_buffer()<cr>
-  autocmd InsertLeave *.clj,*.cljs,*.cljc call <sid>send_buffer()
-  autocmd VimLeavePre *.clj,*cljs,*.cljc call <sid>stop_server()
-  autocmd FileType clojure nnoremap <buffer> <Tab> :call <sid>do_indent()<cr>
-  autocmd FileType clojure nnoremap <buffer> <S-Tab> :call <sid>do_undent()<cr>
+  autocmd BufNewFile,BufReadPost *.clj,*.cljs,*.cljc call parinfer#start_server()
+  autocmd InsertLeave *.clj,*.cljs,*.cljc call parinfer#send_buffer()
+  autocmd VimLeavePre *.clj,*cljs,*.cljc call <sid> stop_server()
+  autocmd FileType clojure nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
   " stil considering these mappings
-  " au TextChanged *.clj call <sid>send_buffer()
-  " au FileType clojure nnoremap <M-Tab> :call <sid>do_undent()<cr>
-  autocmd FileType clojure nnoremap <buffer> ]] /^(<CR>
-  autocmd FileType clojure nnoremap <buffer> [[ ?^(<CR>
+  "au TextChanged *.clj,*.cljc,*.cljs call parinfer#send_buffer()
+  "au FileType clojure nnoremap <M-Tab> :call <sid>do_undent()<cr>
+  "autocmd FileType clojure nnoremap <buffer> ]] /^(<CR>
+  "autocmd FileType clojure nnoremap <buffer> [[ ?^(<CR>
 augroup END
-
