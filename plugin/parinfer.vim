@@ -187,13 +187,15 @@ com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode()
 
 augroup parinfer
   autocmd!
-  autocmd BufNewFile,BufReadPost *.clj,*.cljs,*.cljc call parinfer#start_server()
-  autocmd InsertLeave *.clj,*.cljs,*.cljc call parinfer#send_buffer()
-  autocmd VimLeavePre *.clj,*cljs,*.cljc call <sid> stop_server()
+  autocmd BufNewFile,BufReadPost *.clj,*.cljs,*.cljc,*.edn call parinfer#start_server()
+  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn call parinfer#send_buffer()
+  autocmd VimLeavePre *.clj,*cljs,*.cljc,*.edn call <sid> stop_server()
   autocmd FileType clojure nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
   autocmd FileType clojure nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
+  autocmd FileType clojure vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
   " stil considering these mappings
-  "au TextChanged *.clj,*.cljc,*.cljs call parinfer#send_buffer()
+  "au TextChanged *.clj,*.cljc,*.cljs,*.edn call parinfer#send_buffer()
   "au FileType clojure nnoremap <M-Tab> :call <sid>do_undent()<cr>
   "autocmd FileType clojure nnoremap <buffer> ]] /^(<CR>
   "autocmd FileType clojure nnoremap <buffer> [[ ?^(<CR>
