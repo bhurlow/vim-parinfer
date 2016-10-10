@@ -1,0 +1,55 @@
+*vim-parinfer.txt*	Simpler Lisp editing in vim
+
+
+                                                  (
+   )   (      )                  )  (   (         )\ )    (   (
+  /((  )\    (     ___ `  )   ( /(  )(  )\   (   (()/(   ))\  )(
+ (_))\((_)   )\  '|___|/(/(   )(_))(()\((_)  )\ ) /(_)) /((_)(()\
+ _)((_)(_) _((_))     ((_)_\ ((_)_  ((_)(_) _(_/((_) _|(_))   ((_)
+ \ V / | || '  \()    | '_ \)/ _` || '_|| || ' \))|  _|/ -_) | '_|
+  \_/  |_||_|_|_|     | .__/ \__,_||_|  |_||_||_| |_|  \___| |_|
+                      |_|
+
+
+INTRODUCTION                                           *parinfer-introduction*
+
+vim-parinfer is a plugin for parinfer-style editing in vim [0].
+
+[0]: https://shaunlebron.github.io/parinfer/
+
+INSTALLATION                                           *parinfer-installation*
+
+After installing the plugin, run the following commands in the terminal:
+
+    cd ~/.vim/<plugin-dir>/vim-parinfer/
+    npm install
+
+where <plugin-dir> is:
+
+- `bundle` for Pathogen and Vundle
+- `plugged` for vim-plug
+
+MAPPINGS                                                    *parinfer-mappings*
+
+I'm still getting a feel for what the most idiomatic mappings for vim parinfer
+should be. As suggested by the parinfer site, I've mapped `<Tab>` to perform a
+smart indent and `Shift + <Tab>` to un-indent.
+
+Currently text changes in insert mode changes **do not** cause parinfer
+evaluation. The eval is caused when ***leaving*** insert mode.
+
+NOTES                                                          *parinfer-notes*
+
+This is a really basic wrapper that shells out to a node.js server which parses
+the clj text using the parinfer js module target. This is cool because it
+allows us to upgrade the parinfer lib without changing any vim code. Also the
+less vimscript the better imho. Also you should know that the top level form by
+your cursor is sent to the parser on every indent and `InsertLeave` event.
+
+TODOS                                                          *parinfer-todos*
+
+- scope vars in script instead of global
+- toggle between indent and paren mode
+- catch parsing errors in node server
+- set-able server port
+- handle other filetypes besides clojure
