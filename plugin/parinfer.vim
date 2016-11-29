@@ -19,44 +19,17 @@ endfunction
 "  searchpair('(', '', ')', 'r')
 function! s:Select_full_form()
 
-  let starting_line = line('.')
-  let top_empty = 0
-  let bottom_empty = 0
+  "search backward for a ( on first col. Do not move the cursor
+  let topline = search('^(', 'bn') - 1
 
-  " recursivley search for empty line above
-  while !top_empty
-    let l = getline(starting_line)
-    if l == ""
-      let top_empty = starting_line
-      break
-    elseif l == 1
-      break
-    endif
-    let starting_line = starting_line -  1
-  endwhile
+  "find the matching pair. Do not move the cursor
+  let bottomline = searchpair('(','',')', 'n') + 1
 
-  " b/c we know it was previously on an empty line
-  let starting_line += 1
-  
-  while !bottom_empty
-    let l = getline(starting_line)
-    if l == ""
-      let bottom_empty = starting_line
-      break
-    elseif l == 1
-      break
-    endif
-    let starting_line = starting_line +  1
-  endwhile
+  let lines = getline(topline, bottomline)
 
-  let lines = getline(top_empty + 1, bottom_empty - 1)
-  
   let section = join(lines, "\n")
-  " for frag in lines
-  "   let section = section . frag
-  " endfor 
-  
-  return [top_empty, bottom_empty, section]
+
+  return [topline, bottomline, section]
   
 endfunction
 
