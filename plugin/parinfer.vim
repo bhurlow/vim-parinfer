@@ -3,17 +3,9 @@
 " v 0.0.4
 " brian@brianhurlow.com
 
-" TODO: let server port be global var
-
-let g:parinfer_server_reachable = 0
-"let g:parinfer_server_pid = 0
+source plugin/parinfer_lib.vim
 let g:parinfer_mode = "indent"
 let g:parinfer_script_dir = resolve(expand("<sfile>:p:h:h"))
-
-function! parinfer#ping_server()
-  let cmd = 'curl -sw "%{http_code}" localhost:8088 -o /dev/null'
-  return system(cmd)
-endfunction
 
 " recursive search might be good
 "  searchpair('(', '', ')', 'r')
@@ -95,83 +87,6 @@ function! parinfer#encode(data)
 	return iconv(body, &encoding, "utf-8")
 endfunction
 
-function! parinfer#send_buffer()
-
-  "if !g:parinfer
-  "  echo "parinfer server not started"
-  "  return 0
-  "endif
-  
-  let pos = getpos(".")
-  let cursor = pos[0]
-  let line = pos[1]
-
-  let block = s:Select_full_form()
-  let top_line = block[0]
-  let bottom_line = block[1]
-  let form = block[2]
-
-  let body = parinfer#encode(form)
-
-  let jsonbody = '{"text":' . body . ',"cursor":' . cursor . ',"line":' . line . '}'
-
-  " avoiding passing var directly 
-  " to shell cmd b/c of enconding crazyness
-  let cmd = "cat /tmp/parifer_deck.txt | curl -s -X POST -d @- localhost:8088"
-  let cmd = cmd . "/" . g:parinfer_mode
-
-  " call silent here b/c redir normally
-  " prints to page and file
-  :silent call parinfer#write_tmp(jsonbody)
-
-  let res = ""
-
-  try
-    let res = system(cmd)
-  catch
-    echom "parinfer curl exec error"
-    echom "error code" . v:exception
-  finally
-    " echom "finally block"
-  endtry
-
-  " if our shell command fails 
-  " don't draw the res
-  if v:shell_error != 0
-    echo "shell error"
-  else
-    call parinfer#draw(res, top_line, bottom_line)
-  endif
-  
-endfunction
-
-function! parinfer#start_server()
-  let status = parinfer#ping_server()
-  if status == 200 
-    return 1
-  else
-    let cmd = "node " . g:parinfer_script_dir . "/server.js"  . " &> /tmp/parinfer.log & echo $!"
-    let pid = system(cmd)
-    " not sure why it gives 0 all the time: echo "SHELL CMD STATUS CODE" . v:shell_error
-    " i'd like to detect of the server command returns an error code
-    "let g:parinfer_server_pid = pid
-    return pid
-  endif
-endfunction
-
-function! parinfer#ToggleParinferMode()
-  if g:parinfer_mode == "indent"
-    let g:parinfer_mode = "paren"
-  else
-    let g:parinfer_mode = "indent"
-  endif
-endfunction
-
-function! parinfer#stop_server()
-  let cmd = "kill -9 " . g:parinfer_server_pid
-  let res = system(cmd)
-endfunction
-
 function! parinfer#do_indent()
   normal! >>
   call parinfer#send_buffer()
@@ -182,7 +97,6 @@ function! parinfer#do_undent()
   call parinfer#send_buffer()
 endfunction
 
-"nnoremap <buffer> <leader>bb :call parinfer#pasend_buffer()<cr>
 com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode() 
 
 augroup parinfer
