@@ -11,44 +11,17 @@ let g:parinfer_script_dir = resolve(expand("<sfile>:p:h:h"))
 "  searchpair('(', '', ')', 'r')
 function! s:Select_full_form()
 
-  let starting_line = line('.')
-  let top_empty = 0
-  let bottom_empty = 0
+  "search backward for a ( on first col. Do not move the cursor
+  let topline = search('^(', 'bn') - 1
 
-  " recursivley search for empty line above
-  while !top_empty
-    let l = getline(starting_line)
-    if l == ""
-      let top_empty = starting_line
-      break
-    elseif l == 1
-      break
-    endif
-    let starting_line = starting_line -  1
-  endwhile
+  "find the matching pair. Do not move the cursor
+  let bottomline = searchpair('(','',')', 'n') + 1
 
-  " b/c we know it was previously on an empty line
-  let starting_line += 1
-  
-  while !bottom_empty
-    let l = getline(starting_line)
-    if l == ""
-      let bottom_empty = starting_line
-      break
-    elseif l == 1
-      break
-    endif
-    let starting_line = starting_line +  1
-  endwhile
+  let lines = getline(topline, bottomline)
 
-  let lines = getline(top_empty + 1, bottom_empty - 1)
-  
   let section = join(lines, "\n")
-  " for frag in lines
-  "   let section = section . frag
-  " endfor 
-  
-  return [top_empty, bottom_empty, section]
+
+  return [topline, bottomline, section]
   
 endfunction
 
@@ -101,13 +74,15 @@ com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode()
 
 augroup parinfer
   autocmd!
-  autocmd BufNewFile,BufReadPost *.clj,*.cljs,*.cljc call parinfer#start_server()
-  autocmd InsertLeave *.clj,*.cljs,*.cljc call parinfer#send_buffer()
-  autocmd VimLeavePre *.clj,*cljs,*.cljc call <sid> stop_server()
+  autocmd BufNewFile,BufReadPost *.clj,*.cljs,*.cljc,*.edn call parinfer#start_server()
+  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn call parinfer#send_buffer()
+  autocmd VimLeavePre *.clj,*cljs,*.cljc,*.edn call <sid> stop_server()
   autocmd FileType clojure nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
   autocmd FileType clojure nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
+  autocmd FileType clojure vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
   " stil considering these mappings
-  "au TextChanged *.clj,*.cljc,*.cljs call parinfer#send_buffer()
+  "au TextChanged *.clj,*.cljc,*.cljs,*.edn call parinfer#send_buffer()
   "au FileType clojure nnoremap <M-Tab> :call <sid>do_undent()<cr>
   "autocmd FileType clojure nnoremap <buffer> ]] /^(<CR>
   "autocmd FileType clojure nnoremap <buffer> [[ ?^(<CR>
