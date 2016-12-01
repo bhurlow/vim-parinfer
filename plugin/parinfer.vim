@@ -1,29 +1,27 @@
 
 " VIM PARINFER PLUGIN
-" v 0.0.4
+" v 1.0.0
 " brian@brianhurlow.com
 
-" TODO: let server port be global var
-
-let g:parinfer_server_reachable = 0
-"let g:parinfer_server_pid = 0
+source plugin/parinfer_lib.vim
 let g:parinfer_mode = "indent"
 let g:parinfer_script_dir = resolve(expand("<sfile>:p:h:h"))
 
-function! parinfer#ping_server()
-  let cmd = 'curl -sw "%{http_code}" localhost:8088 -o /dev/null'
-  return system(cmd)
-endfunction
-
-" recursive search might be good
-"  searchpair('(', '', ')', 'r')
-function! s:Select_full_form()
+function! g:Select_full_form()
 
   "search backward for a ( on first col. Do not move the cursor
   let topline = search('^(', 'bn') - 1
 
   "find the matching pair. Do not move the cursor
+  " TODO this still causes problems when the form is accidentally imbalacned 
+  " parinfer can't fix this case b/c we don't find the proper form to evaluate
+  call setpos('.', [0, topline + 1, 1, 0])
   let bottomline = searchpair('(','',')', 'n') + 1
+
+  " could be a one line form?
+  if bottomline == 1
+    let bottomline = topline + 1
+  endif
 
   let lines = getline(topline, bottomline)
 
@@ -34,142 +32,65 @@ function! s:Select_full_form()
 endfunction
 
 function! parinfer#draw(res, top, bottom)
-
-  let save_cursor = getpos(".")
   let lines = split(a:res, "\n")
-
   let counter = a:top + 1
   for line in lines
     call setline(counter, line)
     let counter += 1
   endfor
   redraw!
+endfunction
+
+function! g:ProcessForm()
+
+  let save_cursor = getpos(".")
+  let data = g:Select_full_form()
+  let form = data[2]
+
+  " TODO! pass in cursor to second ard
+  let res = g:ParinferLib.IndentMode(form, {})
+  let text = res.text
+
+  call parinfer#draw(text, data[0], data[1])
 
   " reset cursor to where it was
   call setpos('.', save_cursor)
-endfunction
 
-function! parinfer#write_tmp(body)
-  redir! > /tmp/parifer_deck.txt
-    echo a:body
-  redir END
-endfunction
-
-" gotta make sure the clj string
-" can be json parse-able 
-" thanks:
-" https://github.com/mattn/webapi-vim/blob/master/autoload/webapi/json.vim
-function! parinfer#encode(data)
-	let body = '"' . escape(a:data, '\"') . '"'
-	let body = substitute(body, "\r", '\\r', 'g')
-	let body = substitute(body, "\n", '\\n', 'g')
-	let body = substitute(body, "\t", '\\t', 'g')
-	let body = substitute(body, '\([[:cntrl:]]\)', '\=printf("\x%02d", char2nr(submatch(1)))', 'g')
-	return iconv(body, &encoding, "utf-8")
-endfunction
-
-function! parinfer#send_buffer()
-
-  "if !g:parinfer
-  "  echo "parinfer server not started"
-  "  return 0
-  "endif
-  
-  let pos = getpos(".")
-  let cursor = pos[0]
-  let line = pos[1]
-
-  let block = s:Select_full_form()
-  let top_line = block[0]
-  let bottom_line = block[1]
-  let form = block[2]
-
-  let body = parinfer#encode(form)
-
-  let jsonbody = '{"text":' . body . ',"cursor":' . cursor . ',"line":' . line . '}'
-
-  " avoiding passing var directly 
-  " to shell cmd b/c of enconding crazyness
-  let cmd = "cat /tmp/parifer_deck.txt | curl -s -X POST -d @- localhost:8088"
-  let cmd = cmd . "/" . g:parinfer_mode
-
-  " call silent here b/c redir normally
-  " prints to page and file
-  :silent call parinfer#write_tmp(jsonbody)
-
-  let res = ""
-
-  try
-    let res = system(cmd)
-  catch
-    echom "parinfer curl exec error"
-    echom "error code" . v:exception
-  finally
-    " echom "finally block"
-  endtry
-
-  " if our shell command fails 
-  " don't draw the res
-  if v:shell_error != 0
-    echo "shell error"
-  else
-    call parinfer#draw(res, top_line, bottom_line)
-  endif
-  
-endfunction
-
-function! parinfer#start_server()
-  let status = parinfer#ping_server()
-  if status == 200 
-    return 1
-  else
-    let cmd = "node " . g:parinfer_script_dir . "/server.js"  . " &> /tmp/parinfer.log & echo $!"
-    let pid = system(cmd)
-    " not sure why it gives 0 all the time: echo "SHELL CMD STATUS CODE" . v:shell_error
-    " i'd like to detect of the server command returns an error code
-    "let g:parinfer_server_pid = pid
-    return pid
-  endif
-endfunction
-
-function! parinfer#ToggleParinferMode()
-  if g:parinfer_mode == "indent"
-    let g:parinfer_mode = "paren"
-  else
-    let g:parinfer_mode = "indent"
-  endif
-endfunction
-
-function! parinfer#stop_server()
-  let cmd = "kill -9 " . g:parinfer_server_pid
-  let res = system(cmd)
 endfunction
 
 function! parinfer#do_indent()
   normal! >>
-  call parinfer#send_buffer()
+  call g:ProcessForm()
 endfunction
 
 function! parinfer#do_undent()
   normal! <<
-  call parinfer#send_buffer()
+  call g:ProcessForm()
 endfunction
 
-"nnoremap <buffer> <leader>bb :call parinfer#pasend_buffer()<cr>
+function! parinfer#delete_line()
+  delete
+  call g:ProcessForm()
+endfunction
+
+function! parinfer#put_line()
+  put
+  call g:ProcessForm()
+endfunction
+
+" TODO toggle modes
 com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode() 
 
 augroup parinfer
   autocmd!
-  autocmd BufNewFile,BufReadPost *.clj,*.cljs,*.cljc,*.edn call parinfer#start_server()
-  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn call parinfer#send_buffer()
-  autocmd VimLeavePre *.clj,*cljs,*.cljc,*.edn call <sid> stop_server()
+  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn call g:ProcessForm()
+  autocmd FileType clojure nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
   autocmd FileType clojure nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
   autocmd FileType clojure nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
   autocmd FileType clojure vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
   autocmd FileType clojure vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
-  " stil considering these mappings
-  "au TextChanged *.clj,*.cljc,*.cljs,*.edn call parinfer#send_buffer()
-  "au FileType clojure nnoremap <M-Tab> :call <sid>do_undent()<cr>
-  "autocmd FileType clojure nnoremap <buffer> ]] /^(<CR>
-  "autocmd FileType clojure nnoremap <buffer> [[ ?^(<CR>
+
+  " so dd and p trigger paren rebalance
+  autocmd FileType clojure nnoremap <buffer> dd :call parinfer#delete_line()<cr>
+  autocmd FileType clojure nnoremap <buffer> p :call parinfer#put_line()<cr>
 augroup END
