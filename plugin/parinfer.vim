@@ -41,12 +41,6 @@ function! parinfer#draw(res, top, bottom)
   call setpos('.', save_cursor)
 endfunction
 
-function! parinfer#write_tmp(body)
-  redir! > /tmp/parifer_deck.txt
-    echo a:body
-  redir END
-endfunction
-
 " gotta make sure the clj string
 " can be json parse-able 
 " thanks:
@@ -60,23 +54,40 @@ function! parinfer#encode(data)
 	return iconv(body, &encoding, "utf-8")
 endfunction
 
+function! g:ProcessForm()
+
+  let data = s:Select_full_form()
+  let form = data[2]
+
+  echo form
+
+  let res = g:ParinferLib.IndentMode(form, {})
+  let text = res.text
+
+  " call parinfer#draw(text, data[0], data[1])
+
+endfunction
+
 function! parinfer#do_indent()
+  echo "INDE"
   normal! >>
-  call parinfer#send_buffer()
+  call g:ProcessForm()
 endfunction
 
 function! parinfer#do_undent()
   normal! <<
-  call parinfer#send_buffer()
+  call g:ProcessForm()
 endfunction
 
 com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode() 
 
+" for testing
+nmap <Tab> :call parinfer#do_indent() <cr>
+nmap <S-Tab> :call parinfer#do_undent()<cr>
+
 augroup parinfer
   autocmd!
-  autocmd BufNewFile,BufReadPost *.clj,*.cljs,*.cljc,*.edn call parinfer#start_server()
   autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn call parinfer#send_buffer()
-  autocmd VimLeavePre *.clj,*cljs,*.cljc,*.edn call <sid> stop_server()
   autocmd FileType clojure nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
   autocmd FileType clojure nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
   autocmd FileType clojure vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
