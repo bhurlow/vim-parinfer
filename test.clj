@@ -1,4 +1,8 @@
 
+(a b
+  c
+
+  d)
 
 (defn [asdf]
   (ago 1o 3))
