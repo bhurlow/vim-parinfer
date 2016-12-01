@@ -1,11 +1,10 @@
 
 " VIM PARINFER PLUGIN
-" v 1.0.0
+" v 1.0.1
 " brian@brianhurlow.com
 
-source plugin/parinfer_lib.vim
-let g:parinfer_mode = "indent"
 let g:parinfer_script_dir = resolve(expand("<sfile>:p:h:h"))
+let g:parinfer_mode = "indent"
 
 function! g:Select_full_form()
 
@@ -48,7 +47,7 @@ function! parinfer#process_form()
   let form = data[2]
 
   " TODO! pass in cursor to second ard
-  let res = g:ParinferLib.IndentMode(form, {})
+  let res = parinfer_lib#IndentMode(form, {})
   let text = res.text
 
   call parinfer#draw(text, data[0], data[1])
@@ -113,7 +112,5 @@ augroup parinfer
   " so dd and p trigger paren rebalance
   autocmd FileType clojure nnoremap <buffer> dd :call parinfer#delete_line()<cr>
   autocmd FileType clojure nnoremap <buffer> p :call parinfer#put_line()<cr>
-
   " autocmd FileType clojure nnoremap <buffer> x :call parinfer#del_char()<cr>
-
 augroup END
