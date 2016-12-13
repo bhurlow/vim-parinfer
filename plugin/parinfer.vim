@@ -9,30 +9,40 @@ let g:parinfer_mode = "indent"
 function! g:Select_full_form()
 
   "search backward for a ( on first col. Do not move the cursor
-  let topline = search('^(', 'bn') - 1
+  let topline = search('^(', 'bn') 
 
-  "find the matching pair. Do not move the cursor
-  " TODO this still causes problems when the form is accidentally imbalacned 
-  " parinfer can't fix this case b/c we don't find the proper form to evaluate
-  call setpos('.', [0, topline + 1, 1, 0])
-  let bottomline = searchpair('(','',')', 'n') + 1
+  let current_line = getline('.')
 
-  " could be a one line form?
-  if bottomline == 1
-    let bottomline = topline + 1
+  " handle case when cursor is ontop of start mark
+  " (search backwards misses this)
+  if current_line[0] == '('
+    let topline = line('.')
+  endif
+
+  " temp, set cursor to form start
+  call setpos('.', [0, topline, 1, 0])
+
+  " next paren match 
+  " only usable when parens are balanced
+  let matchline = searchpair('(','',')', 'nW') 
+
+  let bottomline = search('^(', 'nW') - 1
+
+  " if no subsequent form can be found
+  " assume we've hit the bottom of the file
+  if bottomline == -1
+    let bottomline = line('$')
   endif
 
   let lines = getline(topline, bottomline)
-
   let section = join(lines, "\n")
-
   return [topline, bottomline, section]
   
 endfunction
 
 function! parinfer#draw(res, top, bottom)
   let lines = split(a:res, "\n")
-  let counter = a:top + 1
+  let counter = a:top 
   for line in lines
     call setline(counter, line)
     let counter += 1
