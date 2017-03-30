@@ -112,15 +112,15 @@ com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode()
 
 augroup parinfer
   autocmd!
-  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn call parinfer#process_form()
-  autocmd FileType clojure nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
-  autocmd FileType clojure vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
+  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp call parinfer#process_form()
+  autocmd FileType clojure,racket,lisp nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure,racket,lisp nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure,racket,lisp nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
+  autocmd FileType clojure,racket,lisp vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure,racket,lisp vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
 
   " so dd and p trigger paren rebalance
-  autocmd FileType clojure nnoremap <buffer> dd :call parinfer#delete_line()<cr>
-  autocmd FileType clojure nnoremap <buffer> p :call parinfer#put_line()<cr>
+  autocmd FileType clojure,racket,lisp nnoremap <buffer> dd :call parinfer#delete_line()<cr>
+  autocmd FileType clojure,racket,lisp nnoremap <buffer> p :call parinfer#put_line()<cr>
   " autocmd FileType clojure nnoremap <buffer> x :call parinfer#del_char()<cr>
 augroup END
