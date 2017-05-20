@@ -8,8 +8,26 @@ let g:parinfer_mode = "indent"
 
 function! g:Select_full_form()
 
+let delims = {
+      \ 'parens': {'left': '(', 'right': ')'},
+      \ 'curlies': {'left': '{', 'right': '}'},
+      \ 'brackets': {'left': '[', 'right': ']'}
+      \}
+
+  let full_form_delimiters = delims['parens']
+
   "search backward for a ( on first col. Do not move the cursor
   let topline = search('^(', 'bn') 
+
+  if topline == 0
+    let topline = search('^{', 'bn')
+    let full_form_delimiters = delims['curlies']
+  endif
+
+  if topline == 0
+    let topline = search('^[', 'bn')
+    let full_form_delimiters = delims['brackets']
+  endif
 
   let current_line = getline('.')
 
@@ -17,6 +35,16 @@ function! g:Select_full_form()
   " (search backwards misses this)
   if current_line[0] == '('
     let topline = line('.')
+  elseif current_line[0] == '{'
+    let topline = line('.')
+    let full_form_delimiters = delims['curlies']
+  elseif current_line[0] == '['
+    let topline = line('.')
+    let full_form_delimiters = delims['brackets']
+  endif
+
+  if topline == 0
+    throw 'No top-level form found!'
   endif
 
   " temp, set cursor to form start
@@ -24,9 +52,9 @@ function! g:Select_full_form()
 
   " next paren match 
   " only usable when parens are balanced
-  let matchline = searchpair('(','',')', 'nW') 
+  let matchline = searchpair(full_form_delimiters['left'],'',full_form_delimiters['right'], 'nW') 
 
-  let bottomline = search('^(', 'nW') - 1
+  let bottomline = search('^' . full_form_delimiters['left'], 'nW') - 1
 
   " if no subsequent form can be found
   " assume we've hit the bottom of the file
