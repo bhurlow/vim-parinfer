@@ -8,8 +8,26 @@ let g:parinfer_mode = "indent"
 
 function! g:Select_full_form()
 
+let delims = {
+      \ 'parens': {'left': '(', 'right': ')'},
+      \ 'curlies': {'left': '{', 'right': '}'},
+      \ 'brackets': {'left': '[', 'right': ']'}
+      \}
+
+  let full_form_delimiters = delims['parens']
+
   "search backward for a ( on first col. Do not move the cursor
   let topline = search('^(', 'bn') 
+
+  if topline == 0
+    let topline = search('^{', 'bn')
+    let full_form_delimiters = delims['curlies']
+  endif
+
+  if topline == 0
+    let topline = search('^[', 'bn')
+    let full_form_delimiters = delims['brackets']
+  endif
 
   let current_line = getline('.')
 
@@ -17,6 +35,16 @@ function! g:Select_full_form()
   " (search backwards misses this)
   if current_line[0] == '('
     let topline = line('.')
+  elseif current_line[0] == '{'
+    let topline = line('.')
+    let full_form_delimiters = delims['curlies']
+  elseif current_line[0] == '['
+    let topline = line('.')
+    let full_form_delimiters = delims['brackets']
+  endif
+
+  if topline == 0
+    throw 'No top-level form found!'
   endif
 
   " temp, set cursor to form start
@@ -24,9 +52,9 @@ function! g:Select_full_form()
 
   " next paren match 
   " only usable when parens are balanced
-  let matchline = searchpair('(','',')', 'nW') 
+  let matchline = searchpair(full_form_delimiters['left'],'',full_form_delimiters['right'], 'nW') 
 
-  let bottomline = search('^(', 'nW') - 1
+  let bottomline = search('^' . full_form_delimiters['left'], 'nW') - 1
 
   " if no subsequent form can be found
   " assume we've hit the bottom of the file
@@ -112,15 +140,15 @@ com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode()
 
 augroup parinfer
   autocmd!
-  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn call parinfer#process_form()
-  autocmd FileType clojure nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
-  autocmd FileType clojure vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
+  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp call parinfer#process_form()
+  autocmd FileType clojure,racket,lisp nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure,racket,lisp nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure,racket,lisp nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
+  autocmd FileType clojure,racket,lisp vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure,racket,lisp vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
 
   " so dd and p trigger paren rebalance
-  autocmd FileType clojure nnoremap <buffer> dd :call parinfer#delete_line()<cr>
-  autocmd FileType clojure nnoremap <buffer> p :call parinfer#put_line()<cr>
+  autocmd FileType clojure,racket,lisp nnoremap <buffer> dd :call parinfer#delete_line()<cr>
+  autocmd FileType clojure,racket,lisp nnoremap <buffer> p :call parinfer#put_line()<cr>
   " autocmd FileType clojure nnoremap <buffer> x :call parinfer#del_char()<cr>
 augroup END
