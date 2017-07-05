@@ -84,7 +84,11 @@ function! parinfer#process_form()
   let form = data[2]
 
   " TODO! pass in cursor to second ard
-  let res = parinfer_lib#IndentMode(form, {})
+  if g:parinfer_mode == 'indent'
+    let res = parinfer_lib#IndentMode(form, {})
+  else 
+    let res = parinfer_lib#ParenMode(form, {})
+  endif
   let text = res.text
 
   call parinfer#draw(text, data[0], data[1])
@@ -134,7 +138,14 @@ function! parinfer#del_char()
   call parinfer#process_form()
 endfunction
 
-" TODO toggle modes
+function! parinfer#ToggleParinferMode()
+  if g:parinfer_mode == 'indent'
+    let g:parinfer_mode = 'paren'
+  else
+    let g:parinfer_mode = 'indent'
+  endif
+endfunction
+
 com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode() 
 
 augroup parinfer

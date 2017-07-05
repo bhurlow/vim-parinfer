@@ -755,7 +755,7 @@ function! parinfer_lib#IndentMode(text, options)
 endfunction
 
 function! parinfer_lib#ParenMode(text, options)
-  let l:result = s:ProcessText(a:text, s:INDENT_MODE, a:options)
+  let l:result = s:ProcessText(a:text, s:PAREN_MODE, a:options)
   return s:PublicResult(l:result)
 endfunction
 
