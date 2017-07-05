@@ -75,7 +75,6 @@ function! parinfer#draw(res, top, bottom)
     call setline(counter, line)
     let counter += 1
   endfor
-  redraw!
 endfunction
 
 function! parinfer#process_form()
