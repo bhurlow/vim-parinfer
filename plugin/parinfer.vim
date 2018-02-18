@@ -153,11 +153,11 @@ augroup parinfer
   autocmd FileType clojure,racket,lisp vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
   autocmd FileType clojure,racket,lisp vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
 
-  if exists('#TextChangedI')
+  if exists('##TextChangedI')
     autocmd TextChangedI *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp call parinfer#process_form_insert()
   endif
 
-  if exists('#TextChanged')
+  if exists('##TextChanged')
     autocmd TextChanged *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp call parinfer#process_form()
   else
     " so dd and p trigger paren rebalance
