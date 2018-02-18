@@ -94,7 +94,9 @@ function! parinfer#process_form()
   let res = parinfer_lib#IndentMode(form, {})
   let text = res.text
 
-  call parinfer#draw(text, data[0], data[1])
+  if form != text
+    call parinfer#draw(text, data[0], data[1])
+  endif
 
   " reset cursor to where it was
   call setpos('.', save_cursor)
