@@ -1,5 +1,5 @@
 "" parinfer.vim - a Parinfer implementation in Vimscript
-"" v0.1.0
+"" v0.2.0
 "" https://github.com/oakmac/parinfer-viml
 ""
 "" More information about Parinfer can be found here:
@@ -34,10 +34,10 @@ let s:PARENS[')'] = '('
 let s:PARENS['}'] = '{'
 let s:PARENS[']'] = '['
 
-function! s:IsOpenParen(ch)
-    return a:ch ==# '(' || a:ch ==# '{' || a:ch ==# '['
-endfunction
-
+" Parser 'states'
+let s:CODE = '*'
+let s:COMMENT = ';'
+let s:STRING = '"'
 
 function! s:IsCloseParen(ch)
     return a:ch ==# ')' || a:ch ==# '}' || a:ch ==# ']'
@@ -71,10 +71,7 @@ function! s:CreateInitialResult(text, mode, options)
     let l:result.cursorLine = get(a:options, 'cursorLine', s:SENTINEL_NULL)
     let l:result.cursorDx = get(a:options, 'cursorDx', s:SENTINEL_NULL)
 
-    let l:result.isInCode = 1
-    let l:result.isEscaping = 0
-    let l:result.isInStr = 0
-    let l:result.isInComment = 0
+    let l:result.state = s:CODE
     let l:result.commentX = s:SENTINEL_NULL
 
     let l:result.quoteDanger = 0
@@ -127,24 +124,8 @@ function! s:InsertWithinString(orig, idx, insert)
 endfunction
 
 
-function! s:ReplaceWithinString(orig, startIdx, endIdx, replace)
-    return strpart(a:orig, 0, a:startIdx) . a:replace . strpart(a:orig, a:endIdx)
-endfunction
-
-
 function! s:RemoveWithinString(orig, startIdx, endIdx)
     return strpart(a:orig, 0, a:startIdx) . strpart(a:orig, a:endIdx)
-endfunction
-
-
-function! s:RepeatString(text, n)
-    let l:result = ''
-    let l:i = 0
-    while l:i < a:n
-        let l:result = l:result . a:text
-        let l:i = (l:i + 1)
-    endwhile
-    return l:result
 endfunction
 
 
@@ -154,20 +135,17 @@ endfunction
 
 
 function! s:InsertWithinLine(result, lineNo, idx, insert)
-    let l:line = a:result.lines[a:lineNo]
-    let a:result.lines[a:lineNo] = s:InsertWithinString(l:line, a:idx, a:insert)
+    let a:result.lines[a:lineNo] = s:InsertWithinString(a:result.lines[a:lineNo], a:idx, a:insert)
 endfunction
 
 
 function! s:ReplaceWithinLine(result, lineNo, startIdx, endIdx, replace)
-    let l:line = a:result.lines[a:lineNo]
-    let a:result.lines[a:lineNo] = s:ReplaceWithinString(l:line, a:startIdx, a:endIdx, a:replace)
+    let a:result.lines[a:lineNo] = strpart(a:result.lines[a:lineNo], 0, a:startIdx) . a:replace . strpart(a:result.lines[a:lineNo], a:endIdx)
 endfunction
 
 
 function! s:RemoveWithinLine(result, lineNo, startIdx, endIdx)
-    let l:line = a:result.lines[a:lineNo]
-    let a:result.lines[a:lineNo] = s:RemoveWithinString(l:line, a:startIdx, a:endIdx)
+    let a:result.lines[a:lineNo] = s:RemoveWithinString(a:result.lines[a:lineNo], a:startIdx, a:endIdx)
 endfunction
 
 
@@ -183,11 +161,10 @@ endfunction
 
 
 function! s:CommitChar(result, origCh)
-    let l:ch = a:result.ch
-    if a:origCh !=# l:ch
-        call s:ReplaceWithinLine(a:result, a:result.lineNo, a:result.x, a:result.x + strlen(a:origCh), l:ch)
+    if a:origCh !=# a:result.ch
+        call s:ReplaceWithinLine(a:result, a:result.lineNo, a:result.x, a:result.x + strlen(a:origCh), a:result.ch)
     endif
-    let a:result.x = a:result.x + strlen(l:ch)
+    let a:result.x += strlen(a:result.ch)
 endfunction
 
 
@@ -224,10 +201,7 @@ endfunction
 
 
 function! s:Peek(arr)
-    if len(a:arr) == 0
-        return s:SENTINEL_NULL
-    endif
-    return a:arr[-1]
+    return get(a:arr, -1, s:SENTINEL_NULL)
 endfunction
 
 
@@ -248,22 +222,16 @@ endfunction
 
 
 function! s:IsValidCloseParen(parenStack, ch)
-    if len(a:parenStack) == 0
-        return 0
-    endif
-    return s:Peek(a:parenStack).ch ==# s:PARENS[a:ch]
+    return len(a:parenStack) ? s:Peek(a:parenStack).ch ==# s:PARENS[a:ch] : 0
 endfunction
 
 
 function! s:OnOpenParen(result)
-    if a:result.isInCode
-        let l:newStackEl = {}
-        let l:newStackEl.lineNo = a:result.lineNo
-        let l:newStackEl.x = a:result.x
-        let l:newStackEl.ch = a:result.ch
-        let l:newStackEl.indentDelta = a:result.indentDelta
-        call add(a:result.parenStack, l:newStackEl)
-    endif
+    call add(a:result.parenStack, { "lineNo": a:result.lineNo
+                                \ , "x": a:result.x
+                                \ , "ch": a:result.ch
+                                \ , "indentDelta": a:result.indentDelta
+                                \ })
 endfunction
 
 
@@ -282,92 +250,76 @@ endfunction
 
 
 function! s:OnCloseParen(result)
-    if a:result.isInCode
-        if s:IsValidCloseParen(a:result.parenStack, a:result.ch)
-            call s:OnMatchedCloseParen(a:result)
-        else
-            call s:OnUnmatchedCloseParen(a:result)
-        endif
+    if s:IsValidCloseParen(a:result.parenStack, a:result.ch)
+        call s:OnMatchedCloseParen(a:result)
+    else
+        call s:OnUnmatchedCloseParen(a:result)
     endif
 endfunction
 
 
 function! s:OnTab(result)
-    if a:result.isInCode
-        let a:result.ch = s:DOUBLE_SPACE
-    endif
+    let a:result.ch = s:DOUBLE_SPACE
 endfunction
 
 
 function! s:OnSemicolon(result)
-    if a:result.isInCode
-        let a:result.isInComment = 1
-        let a:result.commentX = a:result.x
-    endif
+    let a:result.state = s:COMMENT
+    let a:result.commentX = a:result.x
 endfunction
 
 
-function! s:OnNewline(result)
-    let a:result.isInComment = 0
+function! s:OnCommentNewline(result)
+    let a:result.state = s:CODE
     let a:result.ch = ''
 endfunction
 
 
-function! s:OnQuote(result)
-    if a:result.isInStr
-        let a:result.isInStr = 0
-    elseif a:result.isInComment
-        let a:result.quoteDanger = ! a:result.quoteDanger
-        if a:result.quoteDanger
-            call s:CacheErrorPos(a:result, s:ERROR_QUOTE_DANGER, a:result.lineNo, a:result.x)
-        endif
-    else
-        let a:result.isInStr = 1
-        call s:CacheErrorPos(a:result, s:ERROR_UNCLOSED_QUOTE, a:result.lineNo, a:result.x)
+function! s:OnNewline(result)
+    let a:result.ch = ''
+endfunction
+
+
+function! s:OnCodeQuote(result)
+    let a:result.state = s:STRING
+    call s:CacheErrorPos(a:result, s:ERROR_UNCLOSED_QUOTE, a:result.lineNo, a:result.x)
+endfunction
+
+
+function! s:OnStringQuote(result)
+    let a:result.state = s:CODE
+endfunction
+
+
+function! s:OnCommentQuote(result)
+    let a:result.quoteDanger = ! a:result.quoteDanger
+    if a:result.quoteDanger
+        call s:CacheErrorPos(a:result, s:ERROR_QUOTE_DANGER, a:result.lineNo, a:result.x)
     endif
 endfunction
 
 
-function! s:OnBackslash(result)
-    let a:result.isEscaping = 1
+function! s:OnBackslashNewline(result)
+    throw s:CreateError(a:result, s:ERROR_EOL_BACKSLASH, a:result.lineNo, a:result.x - 1)
 endfunction
 
-
-function! s:AfterBackslash(result)
-    let a:result.isEscaping = 0
-
-    if a:result.ch ==# s:NEWLINE
-        if a:result.isInCode
-            throw s:CreateError(a:result, s:ERROR_EOL_BACKSLASH, a:result.lineNo, a:result.x - 1)
-        endif
-        call s:OnNewline(a:result)
-    endif
-endfunction
-
-
-function! s:OnChar(result)
-    let l:ch = a:result.ch
-    if a:result.isEscaping
-        call s:AfterBackslash(a:result)
-    elseif s:IsOpenParen(l:ch)
-        call s:OnOpenParen(a:result)
-    elseif s:IsCloseParen(l:ch)
-        call s:OnCloseParen(a:result)
-    elseif l:ch ==# s:DOUBLE_QUOTE
-        call s:OnQuote(a:result)
-    elseif l:ch ==# s:SEMICOLON
-        call s:OnSemicolon(a:result)
-    elseif l:ch ==# s:BACKSLASH
-        call s:OnBackslash(a:result)
-    elseif l:ch ==# s:TAB
-        call s:OnTab(a:result)
-    elseif l:ch ==# s:NEWLINE
-        call s:OnNewline(a:result)
-    endif
-
-    let a:result.isInCode = (! a:result.isInComment) && (! a:result.isInStr)
-endfunction
-
+let s:DISPATCH =
+  \ { '*(': function("<SID>OnOpenParen")
+  \ , '*[': function("<SID>OnOpenParen")
+  \ , '*{': function("<SID>OnOpenParen")
+  \ , '*)': function("<SID>OnCloseParen")
+  \ , '*]': function("<SID>OnCloseParen")
+  \ , '*}': function("<SID>OnCloseParen")
+  \ , '*"': function("<SID>OnCodeQuote")
+  \ , '*;': function("<SID>OnSemicolon")
+  \ , "*\t": function("<SID>OnTab")
+  \ , "*\n": function("<SID>OnNewline")
+  \ , "*\\\n": function("<SID>OnBackslashNewline")
+  \ , ';"': function("<SID>OnCommentQuote")
+  \ , ";\n": function("<SID>OnCommentNewline")
+  \ , '""': function("<SID>OnStringQuote")
+  \ , "\"\n": function("<SID>OnNewline")
+  \ }
 
 ""------------------------------------------------------------------------------
 "" Cursor functions
@@ -411,25 +363,15 @@ endfunction
 
 
 function! s:UpdateParenTrailBounds(result)
-    let l:line = a:result.lines[a:result.lineNo]
-    let l:prevCh = s:SENTINEL_NULL
-    if a:result.x > 0
-        let l:prevCh = l:line[a:result.x - 1]
-    endif
-    let l:ch = a:result.ch
-
-    let l:shouldReset = a:result.isInCode &&
-                      \ ! s:IsCloseParen(l:ch) &&
-                      \ l:ch !=# '' &&
-                      \ (l:ch !=# s:BLANK_SPACE || l:prevCh ==# s:BACKSLASH) &&
-                      \ l:ch !=# s:DOUBLE_SPACE
-
-    if l:shouldReset
-        let a:result.parenTrailLineNo = a:result.lineNo
-        let a:result.parenTrailStartX = a:result.x + 1
-        let a:result.parenTrailEndX = a:result.x + 1
-        let a:result.parenTrailOpeners = []
-        let a:result.maxIndent = s:SENTINEL_NULL
+    if a:result.state ==# s:CODE &&
+      \ a:result.ch =~ '[^)\]}]' &&
+      \ (a:result.ch !=# ' ' || (a:result.x > 0 && a:result.lines[a:result.lineNo][a:result.x - 1] ==# '\'))
+        call extend(a:result, { "parenTrailLineNo": a:result.lineNo
+                            \ , "parenTrailStartX": a:result.x + strlen(a:result.ch)
+                            \ , "parenTrailEndX": a:result.x + strlen(a:result.ch)
+                            \ , "parenTrailOpeners": []
+                            \ , "maxIndent": s:SENTINEL_NULL
+                            \ })
     endif
 endfunction
 
@@ -566,7 +508,7 @@ function! s:CorrectIndent(result)
     let l:newIndent = s:Clamp(l:newIndent, l:minIndent, l:maxIndent)
 
     if l:newIndent != l:origIndent
-        let l:indentStr = s:RepeatString(s:BLANK_SPACE, l:newIndent)
+        let l:indentStr = repeat(s:BLANK_SPACE, l:newIndent)
         call s:ReplaceWithinLine(a:result, a:result.lineNo, 0, l:origIndent, l:indentStr)
         let a:result.x = l:newIndent
         let a:result.indentDelta = a:result.indentDelta + l:newIndent - l:origIndent
@@ -622,8 +564,6 @@ endfunction
 ""------------------------------------------------------------------------------
 
 function! s:ProcessChar(result, ch)
-    let l:origCh = a:ch
-
     let a:result.ch = a:ch
     let a:result.skipChar = 0
 
@@ -638,30 +578,24 @@ function! s:ProcessChar(result, ch)
     if a:result.skipChar
         let a:result.ch = ''
     else
-        call s:OnChar(a:result)
+        call call(get(s:DISPATCH, a:result.state . a:result.ch, function("type")), [a:result])
         call s:UpdateParenTrailBounds(a:result)
     endif
 
-    call s:CommitChar(a:result, l:origCh)
+    call s:CommitChar(a:result, a:ch)
 endfunction
-
 
 function! s:ProcessLine(result, line)
     call s:InitLine(a:result, a:line)
 
     if a:result.mode ==# s:INDENT_MODE
         let a:result.trackingIndent = len(a:result.parenStack) != 0 &&
-                                    \ ! a:result.isInStr
+                                    \ a:result.state !=# s:STRING
     elseif a:result.mode ==# s:PAREN_MODE
-        let a:result.trackingIndent = ! a:result.isInStr
+        let a:result.trackingIndent = a:result.state !=# s:STRING
     endif
 
-    let l:i = 0
-    let l:chars = a:line . s:NEWLINE
-    while l:i < strlen(l:chars)
-        call s:ProcessChar(a:result, l:chars[l:i])
-        let l:i = l:i + 1
-    endwhile
+    call map(split(a:line . s:NEWLINE, '\%([ ()[\]{}";\t\n]\|\\[.\n]\|[^ ()[\]{}";\\\t\n]\+\)\zs'), 's:ProcessChar(a:result, v:val)')
 
     if a:result.lineNo == a:result.parenTrailLineNo
         call s:FinishNewParenTrail(a:result)
@@ -674,7 +608,7 @@ function! s:FinalizeResult(result)
         throw s:CreateError(a:result, s:ERROR_QUOTE_DANGER, s:SENTINEL_NULL, s:SENTINEL_NULL)
     endif
 
-    if a:result.isInStr
+    if a:result.state ==# s:STRING
         throw s:CreateError(a:result, s:ERROR_UNCLOSED_QUOTE, s:SENTINEL_NULL, s:SENTINEL_NULL)
     endif
 
@@ -702,11 +636,7 @@ function! s:ProcessText(text, mode, options)
     let l:result = s:CreateInitialResult(a:text, a:mode, a:options)
 
     try
-        let l:i = 0
-        while l:i < len(l:result.origLines)
-            call s:ProcessLine(l:result, get(l:result.origLines, l:i))
-            let l:i = l:i + 1
-        endwhile
+        call map(copy(l:result.origLines), 's:ProcessLine(l:result, v:val)')
         call s:FinalizeResult(l:result)
     catch /PARINFER_ERROR/
         call s:ProcessError(l:result, {})
@@ -746,19 +676,3 @@ function! s:PublicAPI.ParenMode(text, options)
     let l:result = s:ProcessText(a:text, s:PAREN_MODE, a:options)
     return s:PublicResult(l:result)
 endfunction
-
-"" add autoload syntax fns 
-
-function! parinfer_lib#IndentMode(text, options)
-  let l:result = s:ProcessText(a:text, s:INDENT_MODE, a:options)
-  return s:PublicResult(l:result)
-endfunction
-
-function! parinfer_lib#ParenMode(text, options)
-  let l:result = s:ProcessText(a:text, s:INDENT_MODE, a:options)
-  return s:PublicResult(l:result)
-endfunction
-
-
-
-

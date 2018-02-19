@@ -3,8 +3,11 @@
 " v 1.0.1
 " brian@brianhurlow.com
 
+
 let g:parinfer_script_dir = resolve(expand("<sfile>:p:h:h"))
 let g:parinfer_mode = "indent"
+
+runtime autoload/parinfer_lib.vim
 
 function! g:Select_full_form()
 
@@ -84,7 +87,7 @@ function! parinfer#process_form()
   let form = data[2]
 
   " TODO! pass in cursor to second ard
-  let res = parinfer_lib#IndentMode(form, {})
+  let res = g:ParinferLib.IndentMode(form, {})
   let text = res.text
 
   call parinfer#draw(text, data[0], data[1])
