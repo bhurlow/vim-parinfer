@@ -160,14 +160,6 @@ function! s:InitLine(result, line)
 endfunction
 
 
-function! s:CommitChar(result, origCh)
-    if a:origCh !=# a:result.ch
-        call s:ReplaceWithinLine(a:result, a:result.lineNo, a:result.x, a:result.x + strlen(a:origCh), a:result.ch)
-    endif
-    let a:result.x += strlen(a:result.ch)
-endfunction
-
-
 ""------------------------------------------------------------------------------
 "" Misc Util
 ""------------------------------------------------------------------------------
@@ -360,20 +352,6 @@ endfunction
 ""------------------------------------------------------------------------------
 "" Paren Trail functions
 ""------------------------------------------------------------------------------
-
-
-function! s:UpdateParenTrailBounds(result)
-    if a:result.state ==# s:CODE &&
-      \ a:result.ch =~ '[^)\]}]' &&
-      \ (a:result.ch !=# ' ' || (a:result.x > 0 && a:result.lines[a:result.lineNo][a:result.x - 1] ==# '\'))
-        call extend(a:result, { "parenTrailLineNo": a:result.lineNo
-                            \ , "parenTrailStartX": a:result.x + strlen(a:result.ch)
-                            \ , "parenTrailEndX": a:result.x + strlen(a:result.ch)
-                            \ , "parenTrailOpeners": []
-                            \ , "maxIndent": s:SENTINEL_NULL
-                            \ })
-    endif
-endfunction
 
 
 function! s:ClampParenTrailToCursor(result)
@@ -579,10 +557,24 @@ function! s:ProcessChar(result, ch)
         let a:result.ch = ''
     else
         call call(get(s:DISPATCH, a:result.state . a:result.ch, function("type")), [a:result])
-        call s:UpdateParenTrailBounds(a:result)
+        " UpdateParenTrailBounds
+        if a:result.state ==# s:CODE &&
+          \ a:result.ch =~ '[^)\]}]' &&
+          \ (a:result.ch !=# ' ' || (a:result.x > 0 && a:result.lines[a:result.lineNo][a:result.x - 1] ==# '\'))
+            call extend(a:result, { "parenTrailLineNo": a:result.lineNo
+                                \ , "parenTrailStartX": a:result.x + strlen(a:result.ch)
+                                \ , "parenTrailEndX": a:result.x + strlen(a:result.ch)
+                                \ , "parenTrailOpeners": []
+                                \ , "maxIndent": s:SENTINEL_NULL
+                                \ })
+        endif
     endif
 
-    call s:CommitChar(a:result, a:ch)
+    " CommitChar
+    if a:ch !=# a:result.ch
+        call s:ReplaceWithinLine(a:result, a:result.lineNo, a:result.x, a:result.x + strlen(a:ch), a:result.ch)
+    endif
+    let a:result.x += strlen(a:result.ch)
 endfunction
 
 function! s:ProcessLine(result, line)
