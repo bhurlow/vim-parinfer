@@ -77,8 +77,15 @@ function! parinfer#draw(res, top, bottom)
   endfor
 endfunction
 
-function! parinfer#process_form()
+function! parinfer#process_form_insert()
+  if strcharpart(getline('.')[col('.') - 2:], 0, 1) == " "
+    return
+  endif
 
+  call parinfer#process_form()
+endfunction
+
+function! parinfer#process_form()
   let save_cursor = getpos(".")
   let data = g:Select_full_form()
   let form = data[2]
@@ -87,7 +94,9 @@ function! parinfer#process_form()
   let res = parinfer_lib#IndentMode(form, {})
   let text = res.text
 
-  call parinfer#draw(text, data[0], data[1])
+  if form != text
+    call parinfer#draw(text, data[0], data[1])
+  endif
 
   " reset cursor to where it was
   call setpos('.', save_cursor)
@@ -145,6 +154,10 @@ augroup parinfer
   autocmd FileType clojure,racket,lisp nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
   autocmd FileType clojure,racket,lisp vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
   autocmd FileType clojure,racket,lisp vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
+
+  if exists('##TextChangedI')
+    autocmd TextChangedI *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp call parinfer#process_form_insert()
+  endif
 
   if exists('##TextChanged')
     autocmd TextChanged *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp call parinfer#process_form()
