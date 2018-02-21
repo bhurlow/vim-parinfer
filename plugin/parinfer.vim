@@ -1,6 +1,6 @@
 
 " VIM PARINFER PLUGIN
-" v 1.0.1
+" v 1.1.0
 " brian@brianhurlow.com
 
 
