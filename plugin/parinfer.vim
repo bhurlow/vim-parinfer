@@ -151,23 +151,23 @@ com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode()
 
 augroup parinfer
   autocmd!
-  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp call parinfer#process_form()
-  autocmd FileType clojure,racket,lisp nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure,racket,lisp nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure,racket,lisp nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
-  autocmd FileType clojure,racket,lisp vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure,racket,lisp vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
+  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp,*.ss call parinfer#process_form()
+  autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
+  autocmd FileType clojure,racket,lisp,scheme vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
+  autocmd FileType clojure,racket,lisp,scheme vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
 
   if exists('##TextChangedI')
-    autocmd TextChangedI *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp call parinfer#process_form_insert()
+    autocmd TextChangedI *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp,*.ss call parinfer#process_form_insert()
   endif
 
   if exists('##TextChanged')
-    autocmd TextChanged *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp call parinfer#process_form()
+    autocmd TextChanged *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp,*.ss call parinfer#process_form()
   else
     " so dd and p trigger paren rebalance
-    autocmd FileType clojure,racket,lisp nnoremap <buffer> dd :call parinfer#delete_line()<cr>
-    autocmd FileType clojure,racket,lisp nnoremap <buffer> p :call parinfer#put_line()<cr>
+    autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> dd :call parinfer#delete_line()<cr>
+    autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> p :call parinfer#put_line()<cr>
     " autocmd FileType clojure nnoremap <buffer> x :call parinfer#del_char()<cr>
   endif
 augroup END
