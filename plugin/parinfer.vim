@@ -151,7 +151,7 @@ com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode()
 
 augroup parinfer
   autocmd!
-  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp,*.ss call parinfer#process_form()
+  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn,*.hl,*.lisp,*.rkt,,*.ss call parinfer#process_form()
   autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
   autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
   autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
@@ -159,11 +159,11 @@ augroup parinfer
   autocmd FileType clojure,racket,lisp,scheme vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
 
   if exists('##TextChangedI')
-    autocmd TextChangedI *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp,*.ss call parinfer#process_form_insert()
+    autocmd TextChangedI *.clj,*.cljs,*.cljc,*.edn,*.hl,*.lisp,*.rkt,*.ss call parinfer#process_form_insert()
   endif
 
   if exists('##TextChanged')
-    autocmd TextChanged *.clj,*.cljs,*.cljc,*.edn,*.rkt,*.lisp,*.ss call parinfer#process_form()
+    autocmd TextChanged *.clj,*.cljs,*.cljc,*.edn,*.hl,*.lisp,*.rkt,*.ss call parinfer#process_form()
   else
     " so dd and p trigger paren rebalance
     autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> dd :call parinfer#delete_line()<cr>
