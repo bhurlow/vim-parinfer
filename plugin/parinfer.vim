@@ -74,10 +74,12 @@ endfunction
 function! parinfer#draw(res, top, bottom)
   let lines = split(a:res, "\n")
   let counter = a:top 
-  for line in lines
-    call setline(counter, line)
-    let counter += 1
-  endfor
+
+  " setline if this is not an undo
+  try
+    undojoin | call setline(counter, lines)
+  catch /E790/
+  endtry
 endfunction
 
 function! parinfer#process_form_insert()
