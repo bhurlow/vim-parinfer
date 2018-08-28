@@ -32,9 +32,9 @@ Currently text changes in insert mode changes **do not** cause parinfer
 evaluation. The eval is caused when ***leaving*** insert mode.
 
 Additional file types and filenames may be handled with vim-parinfer by
-adjusting g:vim_parinfer_globs and g:vim_parinfer_extensions within your vimrc.
+adjusting g:vim_parinfer_globs and g:vim_parinfer_filetypes within your vimrc.
 Review parinfer.vim in the source code for how to specify these variables.  For
-example, to handle **only** Scheme files with names like *.ss, one might specify
+example, to handle **only** Scheme files with names like *.scm, one might specify
 
 - `let g:vim_parinfer_globs = ['*.scm']
 - `let g:vim_parinfer_filetypes = ['scheme']
