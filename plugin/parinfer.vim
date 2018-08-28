@@ -3,9 +3,19 @@
 " v 1.1.0
 " brian@brianhurlow.com
 
+let g:_VIM_PARINFER_DEFAULTS = {
+    \ 'globs':      ['*.clj', '*.cljs', '*.cljc', '*.edn', '*.hl', '*.lisp', '*.rkt', '*.ss'],
+    \ 'filetypes':  ['clojure', 'racket', 'lisp', 'scheme'],
+    \ 'mode':       "indent",
+    \ 'script_dir': resolve(expand("<sfile>:p:h:h"))
+    \ }
+lockvar! g:_VIM_PARINFER_DEFAULTS
 
-let g:parinfer_script_dir = resolve(expand("<sfile>:p:h:h"))
-let g:parinfer_mode = "indent"
+for s:key in keys(g:_VIM_PARINFER_DEFAULTS)
+    if !exists('g:vim_parinfer_' . s:key)
+        let g:vim_parinfer_{s:key} = copy(g:_VIM_PARINFER_DEFAULTS[s:key])
+    endif
+endfor
 
 runtime autoload/parinfer_lib.vim
 
@@ -151,23 +161,21 @@ com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode()
 
 augroup parinfer
   autocmd!
-  autocmd InsertLeave *.clj,*.cljs,*.cljc,*.edn,*.hl,*.lisp,*.rkt,,*.ss call parinfer#process_form()
-  autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
-  autocmd FileType clojure,racket,lisp,scheme vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>
-  autocmd FileType clojure,racket,lisp,scheme vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>
+  execute "autocmd InsertLeave " . join(g:vim_parinfer_globs, ",") . " call parinfer#process_form()"
+  execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>"
+  execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>"
+  execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>"
+  execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>"
 
   if exists('##TextChangedI')
-    autocmd TextChangedI *.clj,*.cljs,*.cljc,*.edn,*.hl,*.lisp,*.rkt,*.ss call parinfer#process_form_insert()
+    execute "autocmd TextChangedI " . join(g:vim_parinfer_globs, ",") . " call parinfer#process_form_insert()"
   endif
 
   if exists('##TextChanged')
-    autocmd TextChanged *.clj,*.cljs,*.cljc,*.edn,*.hl,*.lisp,*.rkt,*.ss call parinfer#process_form()
+    execute "autocmd TextChanged " . join(g:vim_parinfer_globs, ",") . " call parinfer#process_form()"
   else
-    " so dd and p trigger paren rebalance
-    autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> dd :call parinfer#delete_line()<cr>
-    autocmd FileType clojure,racket,lisp,scheme nnoremap <buffer> p :call parinfer#put_line()<cr>
-    " autocmd FileType clojure nnoremap <buffer> x :call parinfer#del_char()<cr>
+    " dd and p trigger paren rebalance
+    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nnoremap <buffer> dd :call parinfer#delete_line()<cr>"
+    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nnoremap <buffer> p  :call parinfer#put_line()<cr>"
   endif
 augroup END
