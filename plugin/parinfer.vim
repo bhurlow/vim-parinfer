@@ -9,7 +9,6 @@ let g:_VIM_PARINFER_DEFAULTS = {
     \ 'mode':       "indent",
     \ 'script_dir': resolve(expand("<sfile>:p:h:h"))
     \ }
-lockvar! g:_VIM_PARINFER_DEFAULTS
 
 for s:key in keys(g:_VIM_PARINFER_DEFAULTS)
     if !exists('g:vim_parinfer_' . s:key)
