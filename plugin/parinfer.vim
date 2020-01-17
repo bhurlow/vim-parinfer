@@ -89,7 +89,7 @@ function! parinfer#draw(res, top, bottom)
     " `undojoin` will throw E790 if used inside undo/redo, but since we don't
     " want parinfer to get in the way when the user is playing with the undo
     " history, we can simply swallow the error and avoid the setline() call
-    undojoin | call setline(counter, lines)
+    undojoin | call setline(a:top, lines)
   catch /E790/
   endtry
 endfunction
