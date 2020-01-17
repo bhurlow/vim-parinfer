@@ -20,7 +20,7 @@ runtime autoload/parinfer_lib.vim
 
 function! g:Select_full_form()
 
-let delims = {
+  let delims = {
       \ 'parens': {'left': '(', 'right': ')'},
       \ 'curlies': {'left': '{', 'right': '}'},
       \ 'brackets': {'left': '[', 'right': ']'}
@@ -56,7 +56,7 @@ let delims = {
   endif
 
   if topline == 0
-    throw 'No top-level form found!'
+    return []
   endif
 
   " temp, set cursor to form start
@@ -100,14 +100,18 @@ endfunction
 function! parinfer#process_form()
   let save_cursor = getpos(".")
   let data = g:Select_full_form()
-  let form = data[2]
 
-  " TODO! pass in cursor to second ard
-  let res = g:ParinferLib.IndentMode(form, {})
-  let text = res.text
+  if len(data) == 3
+    let form = data[2]
 
-  if form != text
-    call parinfer#draw(text, data[0], data[1])
+    " TODO! pass in cursor to second ard
+    let res = g:ParinferLib.IndentMode(form, {})
+    let text = res.text
+
+    if form != text
+      call parinfer#draw(text, data[0], data[1])
+    endif
+
   endif
 
   " reset cursor to where it was
