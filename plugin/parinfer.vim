@@ -82,11 +82,16 @@ endfunction
 
 function! parinfer#draw(res, top, bottom)
   let lines = split(a:res, "\n")
-  let counter = a:top 
-  for line in lines
-    call setline(counter, line)
-    let counter += 1
-  endfor
+
+  try
+    " Don't clutter the undo history with parinfer specific changes.
+    "
+    " `undojoin` will throw E790 if used inside undo/redo, but since we don't
+    " want parinfer to get in the way when the user is playing with the undo
+    " history, we can simply swallow the error and avoid the setline() call
+    undojoin | call setline(counter, lines)
+  catch /E790/
+  endtry
 endfunction
 
 function! parinfer#process_form_insert()
