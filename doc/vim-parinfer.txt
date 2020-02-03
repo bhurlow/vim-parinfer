@@ -21,25 +21,45 @@ INSTALLATION                                           *parinfer-installation*
 
 clone vim-parinfer into your vim config using pathogen or vundle
 
-MAPPINGS                                                    *parinfer-mappings*
+CONFIGURATION                                         *parinfer-configuration*
 
-- `<Tab>` - indents s-expression
-- `<Tab-S>` - dedents s-expression
-- `dd` - deletes line and balances parenthesis
-- `p` - puts line and balances parenthesis
+You can tweak the behavior of vim-parinfer by setting a few variables in your
+.vimrc file.
 
-Currently text changes in insert mode changes **do not** cause parinfer
-evaluation. The eval is caused when ***leaving*** insert mode.
+                                               *parinfer-g:vim_parinfer_globs*
 
-Additional file types and filenames may be handled with vim-parinfer by
-adjusting g:vim_parinfer_globs and g:vim_parinfer_filetypes within your vimrc.
-Review parinfer.vim in the source code for how to specify these variables.  For
-example, to handle **only** Scheme files with names like *.scm, one might specify
+Configure the list of |glob()|s vim-parinfer will use when hooking up to
+|InsertLeave|, |TextChanged|, and |TextChangedI| events.
+>
+  let g:vim_parinfer_globs: ['*.lisp']
+<
+                                           *parinfer-g:vim_parinfer_filetypes*
 
-- `let g:vim_parinfer_globs = ['*.scm']
-- `let g:vim_parinfer_filetypes = ['scheme']
+Configure the list of |filetype|s vim-parinfer should register mappings for:
+>
+  let g:vim_parinfer_filetypes: ['lisp']
+<
+                                                *parinfer-g:vim_parinfer_mode*
 
-NOTES                                                          *parinfer-notes*
+Tells vim-parinfer to start parinfer in the specified mode.  Possible values
+are 'indent' (default), and 'paren'.
+>
+  let g:vim_parinfer_mode = 'paren'
+<
+
+COMMANDS                                                   *parinfer-commands*
+
+                                                *parinfer-:ToggleParinferMode*
+:ToggleParinferMode    Toggle between the different parinfer modes (from
+                       'indent' to 'paren', and vice-versa)
+
+MAPPINGS                                                   *parinfer-mappings*
+
+<Tab>        indents s-expression
+<S-Tab>      dedents s-expression
+dd           deletes line and balances parenthesis
+p            puts line and balances parenthesis
+
+NOTES                                                         *parinfer-notes*
 
 since v 1.0.0. uses pure vimscript for parinfer parsing
-

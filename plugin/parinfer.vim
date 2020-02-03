@@ -103,7 +103,11 @@ function! parinfer#process_form()
   let form = data[2]
 
   " TODO! pass in cursor to second ard
-  let res = g:ParinferLib.IndentMode(form, {})
+  if g:vim_parinfer_mode == 'indent'
+    let res = g:ParinferLib.IndentMode(form, {})
+  else
+    let res = g:ParinferLib.ParenMode(form, {})
+  endif
   let text = res.text
 
   if form != text
@@ -155,7 +159,14 @@ function! parinfer#del_char()
   call parinfer#process_form()
 endfunction
 
-" TODO toggle modes
+function! parinfer#ToggleParinferMode()
+  if g:vim_parinfer_mode == 'indent'
+    let g:vim_parinfer_mode = 'paren'
+  else
+    let g:vim_parinfer_mode = 'indent'
+  endif
+endfunction
+
 com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode() 
 
 augroup parinfer
