@@ -4,8 +4,8 @@
 " brian@brianhurlow.com
 
 let g:_VIM_PARINFER_DEFAULTS = {
-    \ 'globs':      ['*.clj', '*.cljs', '*.cljc', '*.edn', '*.hl', '*.lisp', '*.rkt', '*.ss', '*.lfe'],
-    \ 'filetypes':  ['clojure', 'racket', 'lisp', 'scheme', 'lfe'],
+    \ 'globs':      ['*.clj', '*.cljs', '*.cljc', '*.edn', '*.el', '*.hl', '*.lisp', '*.rkt', '*.ss', '*.lfe', '*.fnl', '*.fennel', '*.carp'],
+    \ 'filetypes':  ['clojure', 'racket', 'lisp', 'scheme', 'lfe', 'fennel'],
     \ 'mode':       "indent",
     \ 'script_dir': resolve(expand("<sfile>:p:h:h"))
     \ }
@@ -105,13 +105,16 @@ function! parinfer#process_form()
     let form = data[2]
 
     " TODO! pass in cursor to second ard
-    let res = g:ParinferLib.IndentMode(form, {})
+    if g:vim_parinfer_mode == 'indent'
+      let res = g:ParinferLib.IndentMode(form, {})
+    else
+      let res = g:ParinferLib.ParenMode(form, {})
+    endif
     let text = res.text
 
     if form != text
       call parinfer#draw(text, data[0], data[1])
     endif
-
   endif
 
   " reset cursor to where it was
@@ -159,7 +162,14 @@ function! parinfer#del_char()
   call parinfer#process_form()
 endfunction
 
-" TODO toggle modes
+function! parinfer#ToggleParinferMode()
+  if g:vim_parinfer_mode == 'indent'
+    let g:vim_parinfer_mode = 'paren'
+  else
+    let g:vim_parinfer_mode = 'indent'
+  endif
+endfunction
+
 com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode() 
 
 augroup parinfer
