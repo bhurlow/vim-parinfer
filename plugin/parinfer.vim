@@ -172,13 +172,16 @@ endfunction
 
 com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode() 
 
+nnoremap <Plug>ParinferDoIndent :call parinfer#do_indent()<cr>
+nnoremap <Plug>ParinferDoUndent :call parinfer#do_undent()<cr>
+vnoremap <Plug>ParinferDoIndent :call parinfer#do_indent()<cr>
+vnoremap <Plug>ParinferDoUndent :call parinfer#do_undent()<cr>
+nnoremap <Plug>ParinferDeleteLine:call parinfer#delete_line()<cr>
+nnoremap <Plug>ParinferPutLine :call parinfer#put_line()<cr>
+
 augroup parinfer
   autocmd!
   execute "autocmd InsertLeave " . join(g:vim_parinfer_globs, ",") . " call parinfer#process_form()"
-  execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>"
-  execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>"
-  execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>"
-  execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>"
 
   if exists('##TextChangedI')
     execute "autocmd TextChangedI " . join(g:vim_parinfer_globs, ",") . " call parinfer#process_form_insert()"
@@ -187,8 +190,12 @@ augroup parinfer
   if exists('##TextChanged')
     execute "autocmd TextChanged " . join(g:vim_parinfer_globs, ",") . " call parinfer#process_form()"
   else
+    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nmap <buffer> >> <Plug>ParinferDoIndent"
+    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nmap <buffer> << <Plug>ParinferDoUndent"
+    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " vmap <buffer> >> <Plug>ParinferDoIndent"
+    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " vmap <buffer> << <Plug>ParinferDoUndent"
     " dd and p trigger paren rebalance
-    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nnoremap <buffer> dd :call parinfer#delete_line()<cr>"
-    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nnoremap <buffer> p  :call parinfer#put_line()<cr>"
+    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nmap <buffer> dd <Plug>ParinferDeleteLine"
+    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nmap <buffer> p  <Plug>ParinferPutLine"
   endif
 augroup END
