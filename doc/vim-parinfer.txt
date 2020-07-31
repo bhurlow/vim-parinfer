@@ -55,8 +55,8 @@ COMMANDS                                                   *parinfer-commands*
 
 MAPPINGS                                                   *parinfer-mappings*
 
-<Tab>        indents s-expression
-<S-Tab>      dedents s-expression
+>>           indents s-expression
+<<           dedents s-expression
 dd           deletes line and balances parenthesis
 p            puts line and balances parenthesis
 

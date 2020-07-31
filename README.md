@@ -33,11 +33,12 @@ run
 
 ## Mappings 
 
-Parinfer is trigger on all TextChanged events within vim.
-In addition, you may use the following mapped commands:
+Parinfer is trigger on all TextChanged events within vim. If your version of
+Vim does not support the 'TextChanged' autocommand event you may use the
+following mapped commands:
 
-- `<Tab>` - indents s-expression
-- `<Tab-S>` - dedents s-expression
+- `>>` - indents s-expression
+- `<<` - dedents s-expression
 - `dd` - deletes line and balances parenthesis
 - `p` - puts line and balances parenthesis
 
