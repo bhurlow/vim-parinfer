@@ -4,8 +4,8 @@
 " brian@brianhurlow.com
 
 let g:_VIM_PARINFER_DEFAULTS = {
-    \ 'globs':      ['*.clj', '*.cljs', '*.cljc', '*.edn', '*.el', '*.hl', '*.lisp', '*.rkt', '*.ss', '*.lfe', '*.fnl', '*.fennel', '*.carp'],
-    \ 'filetypes':  ['clojure', 'racket', 'lisp', 'scheme', 'lfe', 'fennel'],
+    \ 'globs':      ['*.clj', '*.cljs', '*.cljc', '*.edn', '*.el', '*.hl', '*.hy', '*.lisp', '*.rkt', '*.ss', '*.lfe', '*.fnl', '*.fennel', '*.carp'],
+    \ 'filetypes':  ['clojure', 'racket', 'lisp', 'scheme', 'lfe', 'fennel', 'hy'],
     \ 'mode':       "indent",
     \ 'script_dir': resolve(expand("<sfile>:p:h:h"))
     \ }
