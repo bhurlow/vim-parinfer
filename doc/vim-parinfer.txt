@@ -26,13 +26,6 @@ CONFIGURATION                                         *parinfer-configuration*
 You can tweak the behavior of vim-parinfer by setting a few variables in your
 .vimrc file.
 
-                                               *parinfer-g:vim_parinfer_globs*
-
-Configure the list of |glob()|s vim-parinfer will use when hooking up to
-|InsertLeave|, |TextChanged|, and |TextChangedI| events.
->
-  let g:vim_parinfer_globs: ['*.lisp']
-<
                                            *parinfer-g:vim_parinfer_filetypes*
 
 Configure the list of |filetype|s vim-parinfer should register mappings for:

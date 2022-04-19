@@ -4,7 +4,6 @@
 " brian@brianhurlow.com
 
 let g:_VIM_PARINFER_DEFAULTS = {
-    \ 'globs':      ['*.clj', '*.cljs', '*.cljc', '*.edn', '*.el', '*.hl', '*.lisp', '*.rkt', '*.ss', '*.lfe', '*.fnl', '*.fennel', '*.carp'],
     \ 'filetypes':  ['clojure', 'racket', 'lisp', 'scheme', 'lfe', 'fennel'],
     \ 'mode':       "indent",
     \ 'script_dir': resolve(expand("<sfile>:p:h:h"))
@@ -174,18 +173,18 @@ com! -bar ToggleParinferMode cal parinfer#ToggleParinferMode()
 
 augroup parinfer
   autocmd!
-  execute "autocmd InsertLeave " . join(g:vim_parinfer_globs, ",") . " call parinfer#process_form()"
+  execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " autocmd InsertLeave <buffer> call parinfer#process_form()"
   execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>"
   execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>"
   execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " vnoremap <buffer> <Tab> :call parinfer#do_indent()<cr>"
   execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " vnoremap <buffer> <S-Tab> :call parinfer#do_undent()<cr>"
 
   if exists('##TextChangedI')
-    execute "autocmd TextChangedI " . join(g:vim_parinfer_globs, ",") . " call parinfer#process_form_insert()"
+    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " autocmd TextChangedI <buffer> call parinfer#process_form_insert()"
   endif
 
   if exists('##TextChanged')
-    execute "autocmd TextChanged " . join(g:vim_parinfer_globs, ",") . " call parinfer#process_form()"
+    execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " autocmd TextChanged <buffer> call parinfer#process_form()"
   else
     " dd and p trigger paren rebalance
     execute "autocmd FileType " . join(g:vim_parinfer_filetypes, ",") . " nnoremap <buffer> dd :call parinfer#delete_line()<cr>"
