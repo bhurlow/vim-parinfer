@@ -4,7 +4,7 @@
 " brian@brianhurlow.com
 
 let g:_VIM_PARINFER_DEFAULTS = {
-    \ 'filetypes':  ['clojure', 'racket', 'lisp', 'scheme', 'lfe', 'fennel'],
+    \ 'filetypes':  ['clojure', 'racket', 'lisp', 'scheme', 'lfe', 'fennel', 'dune'],
     \ 'mode':       "indent",
     \ 'script_dir': resolve(expand("<sfile>:p:h:h"))
     \ }
