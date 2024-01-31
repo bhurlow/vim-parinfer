@@ -97,6 +97,10 @@ function! parinfer#process_form_insert()
 endfunction
 
 function! parinfer#process_form()
+  if g:vim_parinfer_mode == 'off'
+    return
+  endif
+    
   let save_cursor = getpos(".")
   let data = g:Select_full_form()
 
@@ -164,6 +168,8 @@ endfunction
 function! parinfer#ToggleParinferMode()
   if g:vim_parinfer_mode == 'indent'
     let g:vim_parinfer_mode = 'paren'
+  elseif g:vim_parinfer_mode == 'paren'
+    let g:vim_parinfer_mode = 'off'
   else
     let g:vim_parinfer_mode = 'indent'
   endif
